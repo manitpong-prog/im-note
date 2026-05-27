@@ -14,10 +14,10 @@ data class SupabaseAuthUser(
 )
 
 data class SupabaseAuthSession(
-    @Json(name = "access_token") val accessToken: String,
+    @Json(name = "access_token") val accessToken: String? = null,
     @Json(name = "refresh_token") val refreshToken: String? = null,
     @Json(name = "expires_in") val expiresIn: Long? = null,
-    val tokenType: String? = null,
+    @Json(name = "token_type") val tokenType: String? = null,
     val user: SupabaseAuthUser? = null
 )
 
