@@ -9,12 +9,20 @@ class NoteRepository(private val noteDao: NoteDao) {
         return noteDao.getNoteById(id)
     }
 
+    suspend fun getNotesNeedingSync(): List<Note> {
+        return noteDao.getNotesNeedingSync()
+    }
+
     suspend fun insertNote(note: Note): Long {
         return noteDao.insertNote(note)
     }
 
     suspend fun updateNote(note: Note): Boolean {
         return noteDao.updateNote(note) > 0
+    }
+
+    suspend fun markNoteSynced(localId: Int, remoteId: String, userId: String) {
+        noteDao.markNoteSynced(localId, remoteId, userId)
     }
 
     suspend fun deleteNote(note: Note) {
