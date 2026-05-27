@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Pin
+import androidx.compose.material.icons.filled.RestoreFromTrash
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
@@ -42,6 +43,7 @@ fun SettingsScreen(
     viewModel: NoteViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onNavigateToTrash: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
@@ -58,27 +60,13 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "การตั้งค่า",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
+                title = { Text("การตั้งค่า", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.testTag("settings_back_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "ย้อนกลับ"
-                        )
+                    IconButton(onClick = onNavigateBack, modifier = Modifier.testTag("settings_back_button")) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "ย้อนกลับ")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
         modifier = modifier
@@ -93,110 +81,59 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.Top
         ) {
             SectionTitle("บัญชีและการซิงค์")
-
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     val user = currentUser
-
                     if (user == null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.CloudQueue,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp)
-                            )
-
+                            Icon(Icons.Default.CloudQueue, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp))
                             Spacer(modifier = Modifier.width(12.dp))
-
                             Column(modifier = Modifier.weight(1f)) {
+                                Text("ใช้งานออฟไลน์ได้ทันที", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                 Text(
-                                    text = "ใช้งานออฟไลน์ได้ทันที",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                )
-
-                                Text(
-                                    text = "ไม่ต้องสร้างบัญชีก็จดโน้ตได้ ข้อมูลจะอยู่ในเครื่องนี้ และเมื่อเข้าสู่ระบบจะสามารถสำรองและซิงค์ออนไลน์ได้",
+                                    "ไม่ต้องสร้างบัญชีก็จดโน้ตได้ ข้อมูลจะอยู่ในเครื่องนี้ และเมื่อเข้าสู่ระบบจะสามารถสำรองและซิงค์ออนไลน์ได้",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-
                         Spacer(modifier = Modifier.height(14.dp))
-
                         Button(
                             onClick = onNavigateToLogin,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("settings_login_prompt_button"),
+                            modifier = Modifier.fillMaxWidth().testTag("settings_login_prompt_button"),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                text = "เข้าสู่ระบบ / สมัครสมาชิก",
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("เข้าสู่ระบบ / สมัครสมาชิก", fontWeight = FontWeight.Bold)
                         }
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary),
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (user.imageUrl == "G") {
-                                    Text(
-                                        text = "G",
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 20.sp
-                                    )
+                                    Text("G", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black, fontSize = 20.sp)
                                 } else {
-                                    Icon(
-                                        imageVector = Icons.Default.AccountCircle,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onPrimary
-                                    )
+                                    Icon(Icons.Default.AccountCircle, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                                 }
                             }
-
                             Spacer(modifier = Modifier.width(12.dp))
-
                             Column(modifier = Modifier.weight(1f)) {
+                                Text(user.displayName, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text(user.email, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
-                                    text = user.displayName,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                )
-
-                                Text(
-                                    text = user.email,
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                                Text(
-                                    text = if (user.accountType == "GOOGLE") "บัญชี Google" else "บัญชีอีเมล",
+                                    if (user.accountType == "GOOGLE") "บัญชี Google" else "บัญชีอีเมล",
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
                         }
-
                         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = if (lastSyncTime > 0) Icons.Default.CloudDone else Icons.Default.CloudQueue,
@@ -204,30 +141,19 @@ fun SettingsScreen(
                                 tint = if (lastSyncTime > 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
-
                             Spacer(modifier = Modifier.width(10.dp))
-
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "สถานะซิงค์",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.sp
-                                )
-
+                                Text("สถานะซิงค์", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
                                 Text(
                                     text = when {
                                         isSyncing -> "กำลังซิงค์ข้อมูล..."
-                                        lastSyncTime > 0 -> "ซิงค์ล่าสุด: " + SimpleDateFormat(
-                                            "dd/MM/yyyy HH:mm:ss",
-                                            Locale.getDefault()
-                                        ).format(Date(lastSyncTime))
+                                        lastSyncTime > 0 -> "ซิงค์ล่าสุด: " + SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date(lastSyncTime))
                                         else -> "ยังไม่เคยซิงค์"
                                     },
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-
                             Button(
                                 onClick = { viewModel.triggerSimulatedCloudSync() },
                                 enabled = !isSyncing,
@@ -235,31 +161,15 @@ fun SettingsScreen(
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 if (isSyncing) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(16.dp),
-                                        strokeWidth = 2.dp,
-                                        color = MaterialTheme.colorScheme.onPrimary
-                                    )
+                                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                                 } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Sync,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-
+                                    Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-
-                                    Text(
-                                        text = "ซิงค์",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Text("ซิงค์", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
-
                         Spacer(modifier = Modifier.height(8.dp))
-
                         Text(
                             text = "ระบบออกแบบให้ใช้ได้ทั้งออฟไลน์และออนไลน์: โน้ตจะอยู่ในเครื่องเสมอ และบัญชีจะใช้สำหรับสำรอง/ซิงค์อัตโนมัติเมื่อเชื่อมระบบออนไลน์ครบ",
                             fontSize = 11.sp,
@@ -272,15 +182,10 @@ fun SettingsScreen(
             }
 
             SectionTitle("ตัวเลือกการซิงค์ออนไลน์")
-
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
             ) {
                 Column {
                     SettingsSwitchRow(
@@ -292,9 +197,7 @@ fun SettingsScreen(
                         enabled = currentUser != null,
                         tag = "setting_auto_sync_switch"
                     )
-
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
                     SettingsSwitchRow(
                         icon = Icons.Default.Wifi,
                         title = "ซิงค์เฉพาะ Wi-Fi",
@@ -308,15 +211,10 @@ fun SettingsScreen(
             }
 
             SectionTitle("หน้าตาและค่าเริ่มต้น")
-
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
             ) {
                 Column {
                     SettingsSwitchRow(
@@ -327,9 +225,7 @@ fun SettingsScreen(
                         onCheckedChange = { viewModel.setDarkTheme(it) },
                         tag = "setting_dark_theme_switch"
                     )
-
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
                     SettingsSwitchRow(
                         icon = Icons.Default.Pin,
                         title = "ปักหมุดโน้ตใหม่เป็นค่าเริ่มต้น",
@@ -341,81 +237,58 @@ fun SettingsScreen(
                 }
             }
 
-            if (currentUser != null) {
-                SectionTitle("จัดการผู้ใช้งาน")
-
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
+            SectionTitle("โน้ตที่ลบแล้ว")
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 24.dp)
+                        .clickable { onNavigateToTrash() }
+                        .padding(16.dp)
+                        .testTag("settings_trash_row")
+                ) {
+                    Icon(Icons.Default.RestoreFromTrash, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("ถังขยะ", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text("ดู กู้คืน หรือลบถาวรโน้ตที่เคยลบไปแล้ว", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+
+            if (currentUser != null) {
+                SectionTitle("จัดการผู้ใช้งาน")
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
                 ) {
                     Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.signOutUser() }
-                                .padding(16.dp)
-                                .testTag("settings_logout_row")
+                            modifier = Modifier.fillMaxWidth().clickable { viewModel.signOutUser() }.padding(16.dp).testTag("settings_logout_row")
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Logout,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
+                            Icon(Icons.Default.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(modifier = Modifier.width(12.dp))
-
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "ออกจากระบบ",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp
-                                )
-
-                                Text(
-                                    text = "โน้ตในเครื่องยังอยู่ และสามารถใช้งานออฟไลน์ต่อได้",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Text("ออกจากระบบ", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                Text("โน้ตในเครื่องยังอยู่ และสามารถใช้งานออฟไลน์ต่อได้", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
-
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showRemoveUserDialog = true }
-                                .padding(16.dp)
-                                .testTag("settings_remove_user_row")
+                            modifier = Modifier.fillMaxWidth().clickable { showRemoveUserDialog = true }.padding(16.dp).testTag("settings_remove_user_row")
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PersonRemove,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-
+                            Icon(Icons.Default.PersonRemove, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                             Spacer(modifier = Modifier.width(12.dp))
-
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "ลบผู้ใช้งาน",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-
-                                Text(
-                                    text = "นำบัญชีนี้ออกจากแอพบนเครื่องนี้ โน้ตในเครื่องยังคงอยู่",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.75f)
-                                )
+                                Text("ลบผู้ใช้งาน", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
+                                Text("นำบัญชีนี้ออกจากแอพบนเครื่องนี้ โน้ตในเครื่องยังคงอยู่", fontSize = 11.sp, color = MaterialTheme.colorScheme.error.copy(alpha = 0.75f))
                             }
                         }
                     }
@@ -428,9 +301,7 @@ fun SettingsScreen(
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp)
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
             )
         }
     }
@@ -438,24 +309,9 @@ fun SettingsScreen(
     if (showRemoveUserDialog) {
         AlertDialog(
             onDismissRequest = { showRemoveUserDialog = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.PersonRemove,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
-                )
-            },
-            title = {
-                Text(
-                    text = "ลบผู้ใช้งาน?",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    text = "ต้องการนำผู้ใช้งานนี้ออกจากแอพบนเครื่องนี้ใช่ไหม? โน้ตที่อยู่ในเครื่องจะยังคงอยู่"
-                )
-            },
+            icon = { Icon(Icons.Default.PersonRemove, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("ลบผู้ใช้งาน?", fontWeight = FontWeight.Bold) },
+            text = { Text("ต้องการนำผู้ใช้งานนี้ออกจากแอพบนเครื่องนี้ใช่ไหม? โน้ตที่อยู่ในเครื่องจะยังคงอยู่") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -463,17 +319,13 @@ fun SettingsScreen(
                         viewModel.signOutUser()
                         onNavigateBack()
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
                     Text("ยืนยันลบผู้ใช้งาน")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRemoveUserDialog = false }) {
-                    Text("ยกเลิก")
-                }
+                TextButton(onClick = { showRemoveUserDialog = false }) { Text("ยกเลิก") }
             }
         )
     }
@@ -501,62 +353,27 @@ fun SettingsSwitchRow(
     tag: String = ""
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(
-                    if (checked && enabled) {
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                    } else {
-                        MaterialTheme.colorScheme.surfaceVariant
-                    }
-                ),
+            modifier = Modifier.size(36.dp).clip(CircleShape).background(
+                if (checked && enabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant
+            ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (checked && enabled) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                },
+                tint = if (checked && enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                 modifier = Modifier.size(20.dp)
             )
         }
-
         Spacer(modifier = Modifier.width(12.dp))
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .alpha(if (enabled) 1.0f else 0.4f)
-        ) {
-            Text(
-                text = title,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = subtitle,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Column(modifier = Modifier.weight(1f).alpha(if (enabled) 1.0f else 0.4f)) {
+            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text(subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            enabled = enabled,
-            modifier = Modifier.testTag(tag)
-        )
+        Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled, modifier = Modifier.testTag(tag))
     }
 }
