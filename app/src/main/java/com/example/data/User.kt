@@ -1,4 +1,4 @@
-package com.example.data
+package com.imnotesminimal.app.data
 
 data class User(
     val email: String,
