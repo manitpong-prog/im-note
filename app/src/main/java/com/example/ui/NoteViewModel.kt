@@ -5,12 +5,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sync.NoteSyncRepository
 import com.example.sync.SupabaseAuthRepository
 import com.imnotesminimal.app.data.AppDatabase
 import com.imnotesminimal.app.data.Note
 import com.imnotesminimal.app.data.NoteRepository
 import com.imnotesminimal.app.data.User
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +30,7 @@ enum class SortMode(val displayNameTh: String) {
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: NoteRepository
+    private val syncRepository: NoteSyncRepository
     private val authRepository = SupabaseAuthRepository()
     private val sharedPrefs: SharedPreferences = application.getSharedPreferences("im_notes_prefs", Context.MODE_PRIVATE)
 
@@ -69,6 +70,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     init {
         val database = AppDatabase.getDatabase(application)
         repository = NoteRepository(database.noteDao)
+        syncRepository = NoteSyncRepository(application.applicationContext, repository)
         loadSavedPreferences()
         seedSampleNotes()
     }
@@ -168,8 +170,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
         if (query.isNotBlank()) {
             result = result.filter {
-                it.title.contains(query, ignoreCase = true) ||
-                    it.content.contains(query, ignoreCase = true)
+                it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true)
             }
         }
 
@@ -237,10 +238,14 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val result = authRepository.signUp(email, password, displayName)
             result.fold(
-                onSuccess = { user ->
-                    saveLoggedInUser(user, accessToken = null, refreshToken = null)
+                onSuccess = { (user, session) ->
+                    saveLoggedInUser(
+                        user = user,
+                        accessToken = session?.accessToken,
+                        refreshToken = session?.refreshToken
+                    )
                     onResult(true, "สมัครสมาชิกสำเร็จ")
-                    triggerSimulatedCloudSync()
+                    triggerCloudSync()
                 },
                 onFailure = { error ->
                     onResult(false, error.message ?: "สมัครสมาชิกไม่สำเร็จ")
@@ -268,7 +273,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                         refreshToken = session.refreshToken
                     )
                     onResult(true, "เข้าสู่ระบบสำเร็จ")
-                    triggerSimulatedCloudSync()
+                    triggerCloudSync()
                 },
                 onFailure = { error ->
                     onResult(false, error.message ?: "เข้าสู่ระบบไม่สำเร็จ")
@@ -289,7 +294,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         saveLoggedInUser(loggedUser, accessToken = null, refreshToken = null)
-        triggerSimulatedCloudSync()
+        triggerCloudSync()
     }
 
     private fun saveLoggedInUser(user: User, accessToken: String?, refreshToken: String?) {
@@ -333,20 +338,32 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun triggerSimulatedCloudSync() {
+        triggerCloudSync()
+    }
+
+    private fun triggerCloudSync() {
         val user = _currentUser.value
-        if (user != null && _autoSync.value) {
-            viewModelScope.launch {
-                try {
-                    _isSyncing.value = true
-                    delay(800)
+        val accessToken = sharedPrefs.getString("supabase_access_token", null)
+
+        if (user == null || !_autoSync.value) {
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _isSyncing.value = true
+                val result = syncRepository.uploadPendingNotes(
+                    userId = user.id,
+                    accessToken = accessToken
+                )
+
+                if (result.isSuccess) {
                     val currentTime = System.currentTimeMillis()
                     _lastSyncTime.value = currentTime
                     sharedPrefs.edit().putLong("last_sync_time", currentTime).apply()
-                } catch (e: Exception) {
-                    // Local sync status update failed; no note data is lost.
-                } finally {
-                    _isSyncing.value = false
                 }
+            } finally {
+                _isSyncing.value = false
             }
         }
     }
@@ -381,7 +398,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                     repository.updateNote(updatedNote)
                 }
             }
-            triggerSimulatedCloudSync()
+            triggerCloudSync()
             onComplete()
         }
     }
@@ -393,7 +410,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteNote(note: Note) {
         viewModelScope.launch {
             repository.deleteNote(note)
-            triggerSimulatedCloudSync()
+            triggerCloudSync()
         }
     }
 
@@ -405,7 +422,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 syncStatus = if (_currentUser.value != null) "PENDING" else note.syncStatus
             )
             repository.updateNote(updated)
-            triggerSimulatedCloudSync()
+            triggerCloudSync()
         }
     }
 
@@ -417,7 +434,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 syncStatus = if (_currentUser.value != null) "PENDING" else note.syncStatus
             )
             repository.updateNote(updated)
-            triggerSimulatedCloudSync()
+            triggerCloudSync()
         }
     }
 }
