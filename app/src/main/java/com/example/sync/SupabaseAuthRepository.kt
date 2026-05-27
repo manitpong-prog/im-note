@@ -3,7 +3,7 @@ package com.example.sync
 import com.imnotesminimal.app.data.User
 
 class SupabaseAuthRepository {
-    suspend fun signUp(email: String, password: String, displayName: String): Result<User> {
+    suspend fun signUp(email: String, password: String, displayName: String): Result<Pair<User, SupabaseAuthSession?>> {
         if (!SupabaseConfig.isConfigured) {
             return Result.failure(IllegalStateException("ยังไม่ได้ตั้งค่า Supabase URL และ Anon Key ใน local.properties"))
         }
@@ -30,7 +30,7 @@ class SupabaseAuthRepository {
                         email = authUser?.email ?: email,
                         displayName = displayName,
                         accountType = "EMAIL"
-                    )
+                    ) to session
                 )
             } else {
                 Result.failure(IllegalStateException(toFriendlyAuthError(response.code(), response.errorBody()?.string(), isRegister = true)))
