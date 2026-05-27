@@ -29,6 +29,15 @@ class NoteRepository(private val noteDao: NoteDao) {
         noteDao.markNoteSynced(localId, remoteId, userId)
     }
 
+    suspend fun softDeleteNote(localId: Int, deletedAt: Long, updatedAt: Long, syncStatus: String) {
+        noteDao.softDeleteNote(
+            localId = localId,
+            deletedAt = deletedAt,
+            updatedAt = updatedAt,
+            syncStatus = syncStatus
+        )
+    }
+
     suspend fun deleteNote(note: Note) {
         noteDao.deleteNote(note)
     }
