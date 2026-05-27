@@ -13,6 +13,9 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE deletedAt IS NULL")
     fun getAllNotesFlow(): Flow<List<Note>>
 
+    @Query("SELECT * FROM notes WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
+    fun getDeletedNotesFlow(): Flow<List<Note>>
+
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: Int): Note?
 
@@ -39,6 +42,9 @@ interface NoteDao {
 
     @Query("UPDATE notes SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncStatus = :syncStatus WHERE id = :localId")
     suspend fun softDeleteNote(localId: Int, deletedAt: Long, updatedAt: Long, syncStatus: String)
+
+    @Query("UPDATE notes SET deletedAt = NULL, updatedAt = :updatedAt, syncStatus = :syncStatus WHERE id = :localId")
+    suspend fun restoreNote(localId: Int, updatedAt: Long, syncStatus: String)
 
     @Delete
     suspend fun deleteNote(note: Note)
