@@ -1,14 +1,14 @@
-package com.example.ui
+package com.imnotesminimal.app.ui
 
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.data.AppDatabase
-import com.example.data.Note
-import com.example.data.NoteRepository
-import com.example.data.User
+import com.imnotesminimal.app.data.AppDatabase
+import com.imnotesminimal.app.data.Note
+import com.imnotesminimal.app.data.NoteRepository
+import com.imnotesminimal.app.data.User
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
