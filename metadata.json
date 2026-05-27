@@ -1,0 +1,6 @@
+{
+  "name": "iM Notes Minimal",
+  "description": "A feature-rich note-taking app with color categories, pinning, edit-date tracking, dynamic sorting options, and search capabilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
