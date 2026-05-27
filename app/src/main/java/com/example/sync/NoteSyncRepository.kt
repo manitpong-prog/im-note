@@ -65,7 +65,7 @@ class NoteSyncRepository(
 
                 if (response.isSuccessful) {
                     val remoteNote = response.body()?.firstOrNull()
-                    val remoteId = remoteNote?.id
+                    val remoteId = remoteNote?.id ?: note.remoteId
                     if (!remoteId.isNullOrBlank()) {
                         noteRepository.markNoteSynced(
                             localId = note.id,
@@ -123,7 +123,7 @@ class NoteSyncRepository(
             }
 
             val remoteNotes = response.body().orEmpty()
-                .filter { it.deletedAt == null && !it.id.isNullOrBlank() }
+                .filter { !it.id.isNullOrBlank() }
 
             var changedCount = 0
 
@@ -132,6 +132,20 @@ class NoteSyncRepository(
                 val local = noteRepository.getNoteByRemoteId(remoteId)
                 val remoteUpdatedAt = remote.clientUpdatedAt?.toEpochMillisOrNull() ?: remote.updatedAt?.toEpochMillisOrNull() ?: System.currentTimeMillis()
                 val remoteCreatedAt = remote.clientCreatedAt?.toEpochMillisOrNull() ?: remote.createdAt?.toEpochMillisOrNull() ?: remoteUpdatedAt
+                val remoteDeletedAt = remote.deletedAt?.toEpochMillisOrNull()
+
+                if (remoteDeletedAt != null) {
+                    if (local != null && local.deletedAt == null && local.syncStatus != "PENDING") {
+                        noteRepository.softDeleteNote(
+                            localId = local.id,
+                            deletedAt = remoteDeletedAt,
+                            updatedAt = remoteUpdatedAt,
+                            syncStatus = "SYNCED"
+                        )
+                        changedCount += 1
+                    }
+                    continue
+                }
 
                 if (local == null) {
                     noteRepository.insertNote(
