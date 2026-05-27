@@ -2,6 +2,7 @@ package com.example.sync
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
@@ -40,7 +41,7 @@ interface SupabaseNotesApi {
     suspend fun createNote(
         @Header("apikey") apiKey: String,
         @Header("Authorization") authorization: String,
-        @Body note: SupabaseNoteDto
+        @Body note: Map<String, @JvmSuppressWildcards Any?>
     ): Response<List<SupabaseNoteDto>>
 
     @Headers(
@@ -51,7 +52,7 @@ interface SupabaseNotesApi {
     suspend fun upsertNote(
         @Header("apikey") apiKey: String,
         @Header("Authorization") authorization: String,
-        @Body note: SupabaseNoteDto
+        @Body note: Map<String, @JvmSuppressWildcards Any?>
     ): Response<List<SupabaseNoteDto>>
 
     @GET("rest/v1/notes")
@@ -71,6 +72,14 @@ interface SupabaseNotesApi {
         @Header("apikey") apiKey: String,
         @Header("Authorization") authorization: String,
         @Query("id") remoteIdFilter: String,
-        @Body note: SupabaseNoteDto
+        @Body note: Map<String, @JvmSuppressWildcards Any?>
     ): Response<List<SupabaseNoteDto>>
+
+    @Headers("Prefer: return=minimal")
+    @DELETE("rest/v1/notes")
+    suspend fun deleteNoteByRemoteId(
+        @Header("apikey") apiKey: String,
+        @Header("Authorization") authorization: String,
+        @Query("id") remoteIdFilter: String
+    ): Response<Unit>
 }
