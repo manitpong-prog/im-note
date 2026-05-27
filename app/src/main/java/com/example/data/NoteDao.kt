@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
-    @Query("SELECT * FROM notes")
+    @Query("SELECT * FROM notes WHERE deletedAt IS NULL")
     fun getAllNotesFlow(): Flow<List<Note>>
 
     @Query("SELECT * FROM notes WHERE id = :id")
@@ -19,7 +19,13 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE remoteId = :remoteId LIMIT 1")
     suspend fun getNoteByRemoteId(remoteId: String): Note?
 
-    @Query("SELECT * FROM notes WHERE deletedAt IS NULL AND (remoteId IS NULL OR syncStatus != 'SYNCED')")
+    @Query("""
+        SELECT * FROM notes
+        WHERE
+            (deletedAt IS NULL AND (remoteId IS NULL OR syncStatus != 'SYNCED'))
+            OR
+            (deletedAt IS NOT NULL AND remoteId IS NOT NULL AND syncStatus != 'SYNCED')
+    """)
     suspend fun getNotesNeedingSync(): List<Note>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -30,6 +36,9 @@ interface NoteDao {
 
     @Query("UPDATE notes SET remoteId = :remoteId, userId = :userId, syncStatus = 'SYNCED' WHERE id = :localId")
     suspend fun markNoteSynced(localId: Int, remoteId: String, userId: String)
+
+    @Query("UPDATE notes SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncStatus = :syncStatus WHERE id = :localId")
+    suspend fun softDeleteNote(localId: Int, deletedAt: Long, updatedAt: Long, syncStatus: String)
 
     @Delete
     suspend fun deleteNote(note: Note)
