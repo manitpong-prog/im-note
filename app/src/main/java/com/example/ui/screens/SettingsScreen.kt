@@ -13,8 +13,8 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudQueue
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Wifi
@@ -52,22 +52,33 @@ fun SettingsScreen(
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
     val pinNewDefault by viewModel.pinNewDefault.collectAsState()
 
-    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showRemoveUserDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("การตั้งค่า", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "การตั้งค่า",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,
                         modifier = Modifier.testTag("settings_back_button")
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "ย้อนกลับ")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "ย้อนกลับ"
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         },
         modifier = modifier
@@ -82,15 +93,19 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.Top
         ) {
             SectionTitle("บัญชีและการซิงค์")
+
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 20.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     val user = currentUser
+
                     if (user == null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -99,11 +114,18 @@ fun SettingsScreen(
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(36.dp)
                             )
+
                             Spacer(modifier = Modifier.width(12.dp))
+
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("ใช้งานออฟไลน์ได้ทันที", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                 Text(
-                                    "ไม่ต้องสร้างบัญชีก็จดโน้ตได้ ข้อมูลจะอยู่ในเครื่องนี้ และเมื่อเข้าสู่ระบบจะสามารถสำรองและซิงค์ออนไลน์ได้",
+                                    text = "ใช้งานออฟไลน์ได้ทันที",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+
+                                Text(
+                                    text = "ไม่ต้องสร้างบัญชีก็จดโน้ตได้ ข้อมูลจะอยู่ในเครื่องนี้ และเมื่อเข้าสู่ระบบจะสามารถสำรองและซิงค์ออนไลน์ได้",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -111,6 +133,7 @@ fun SettingsScreen(
                         }
 
                         Spacer(modifier = Modifier.height(14.dp))
+
                         Button(
                             onClick = onNavigateToLogin,
                             modifier = Modifier
@@ -118,7 +141,10 @@ fun SettingsScreen(
                                 .testTag("settings_login_prompt_button"),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("เข้าสู่ระบบ / สมัครสมาชิก", fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "เข้าสู่ระบบ / สมัครสมาชิก",
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -130,17 +156,38 @@ fun SettingsScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (user.imageUrl == "G") {
-                                    Text("G", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black, fontSize = 20.sp)
+                                    Text(
+                                        text = "G",
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 20.sp
+                                    )
                                 } else {
-                                    Icon(Icons.Default.AccountCircle, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                                    Icon(
+                                        imageVector = Icons.Default.AccountCircle,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimary
+                                    )
                                 }
                             }
+
                             Spacer(modifier = Modifier.width(12.dp))
+
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(user.displayName, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                                Text(user.email, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
-                                    if (user.accountType == "GOOGLE") "บัญชี Google" else "บัญชีอีเมล",
+                                    text = user.displayName,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+
+                                Text(
+                                    text = user.email,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Text(
+                                    text = if (user.accountType == "GOOGLE") "บัญชี Google" else "บัญชีอีเมล",
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.SemiBold
@@ -157,19 +204,30 @@ fun SettingsScreen(
                                 tint = if (lastSyncTime > 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
+
                             Spacer(modifier = Modifier.width(10.dp))
+
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("สถานะซิงค์", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                                Text(
+                                    text = "สถานะซิงค์",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.sp
+                                )
+
                                 Text(
                                     text = when {
                                         isSyncing -> "กำลังซิงค์ข้อมูล..."
-                                        lastSyncTime > 0 -> "ซิงค์ล่าสุด: " + SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date(lastSyncTime))
+                                        lastSyncTime > 0 -> "ซิงค์ล่าสุด: " + SimpleDateFormat(
+                                            "dd/MM/yyyy HH:mm:ss",
+                                            Locale.getDefault()
+                                        ).format(Date(lastSyncTime))
                                         else -> "ยังไม่เคยซิงค์"
                                     },
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+
                             Button(
                                 onClick = { viewModel.triggerSimulatedCloudSync() },
                                 enabled = !isSyncing,
@@ -177,18 +235,33 @@ fun SettingsScreen(
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 if (isSyncing) {
-                                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
                                 } else {
-                                    Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.Sync,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("ซิงค์", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+
+                                    Text(
+                                        text = "ซิงค์",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
-                            "ระบบออกแบบให้ใช้ได้ทั้งออฟไลน์และออนไลน์: โน้ตจะอยู่ในเครื่องเสมอ และบัญชีจะใช้สำหรับสำรอง/ซิงค์อัตโนมัติเมื่อเชื่อมระบบออนไลน์ครบ",
+                            text = "ระบบออกแบบให้ใช้ได้ทั้งออฟไลน์และออนไลน์: โน้ตจะอยู่ในเครื่องเสมอ และบัญชีจะใช้สำหรับสำรอง/ซิงค์อัตโนมัติเมื่อเชื่อมระบบออนไลน์ครบ",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -199,9 +272,12 @@ fun SettingsScreen(
             }
 
             SectionTitle("ตัวเลือกการซิงค์ออนไลน์")
+
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 20.dp)
@@ -216,7 +292,9 @@ fun SettingsScreen(
                         enabled = currentUser != null,
                         tag = "setting_auto_sync_switch"
                     )
+
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
                     SettingsSwitchRow(
                         icon = Icons.Default.Wifi,
                         title = "ซิงค์เฉพาะ Wi-Fi",
@@ -230,9 +308,12 @@ fun SettingsScreen(
             }
 
             SectionTitle("หน้าตาและค่าเริ่มต้น")
+
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 20.dp)
@@ -246,7 +327,9 @@ fun SettingsScreen(
                         onCheckedChange = { viewModel.setDarkTheme(it) },
                         tag = "setting_dark_theme_switch"
                     )
+
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
                     SettingsSwitchRow(
                         icon = Icons.Default.Pin,
                         title = "ปักหมุดโน้ตใหม่เป็นค่าเริ่มต้น",
@@ -258,16 +341,19 @@ fun SettingsScreen(
                 }
             }
 
-            SectionTitle("ข้อมูลในเครื่อง")
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp)
-            ) {
-                Column {
-                    if (currentUser != null) {
+            if (currentUser != null) {
+                SectionTitle("จัดการผู้ใช้งาน")
+
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
+                ) {
+                    Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -276,29 +362,61 @@ fun SettingsScreen(
                                 .padding(16.dp)
                                 .testTag("settings_logout_row")
                         ) {
-                            Icon(Icons.Default.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(
+                                imageVector = Icons.Default.Logout,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
                             Spacer(modifier = Modifier.width(12.dp))
+
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("ออกจากระบบ", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                Text("โน้ตในเครื่องยังอยู่ และสามารถใช้งานออฟไลน์ต่อได้", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    text = "ออกจากระบบ",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp
+                                )
+
+                                Text(
+                                    text = "โน้ตในเครื่องยังอยู่ และสามารถใช้งานออฟไลน์ต่อได้",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDeleteConfirmDialog = true }
-                            .padding(16.dp)
-                            .testTag("settings_delete_account_row")
-                    ) {
-                        Icon(Icons.Default.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("ล้างโน้ตและข้อมูลในเครื่องทั้งหมด", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
-                            Text("การลบนี้ย้อนกลับไม่ได้ ควรใช้เฉพาะตอนต้องการเริ่มใหม่", fontSize = 11.sp, color = MaterialTheme.colorScheme.error.copy(alpha = 0.75f))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showRemoveUserDialog = true }
+                                .padding(16.dp)
+                                .testTag("settings_remove_user_row")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PersonRemove,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "ลบผู้ใช้งาน",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+
+                                Text(
+                                    text = "นำบัญชีนี้ออกจากแอพบนเครื่องนี้ โน้ตในเครื่องยังคงอยู่",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.75f)
+                                )
+                            }
                         }
                     }
                 }
@@ -317,25 +435,43 @@ fun SettingsScreen(
         }
     }
 
-    if (showDeleteConfirmDialog) {
+    if (showRemoveUserDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteConfirmDialog = false },
-            icon = { Icon(Icons.Default.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("ล้างข้อมูลทั้งหมด?", fontWeight = FontWeight.Bold) },
-            text = { Text("โน้ตทั้งหมด บัญชี และค่าตั้งค่าในเครื่องนี้จะถูกลบออก ถ้ากดยืนยันแล้วจะกู้คืนไม่ได้") },
+            onDismissRequest = { showRemoveUserDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.PersonRemove,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = {
+                Text(
+                    text = "ลบผู้ใช้งาน?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "ต้องการนำผู้ใช้งานนี้ออกจากแอพบนเครื่องนี้ใช่ไหม? โน้ตที่อยู่ในเครื่องจะยังคงอยู่"
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
-                        showDeleteConfirmDialog = false
-                        viewModel.deleteUserAccount { onNavigateBack() }
+                        showRemoveUserDialog = false
+                        viewModel.signOutUser()
+                        onNavigateBack()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
                 ) {
-                    Text("ยืนยันลบทั้งหมด")
+                    Text("ยืนยันลบผู้ใช้งาน")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                TextButton(onClick = { showRemoveUserDialog = false }) {
                     Text("ยกเลิก")
                 }
             }
@@ -375,15 +511,22 @@ fun SettingsSwitchRow(
                 .size(36.dp)
                 .clip(CircleShape)
                 .background(
-                    if (checked && enabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                    else MaterialTheme.colorScheme.surfaceVariant
+                    if (checked && enabled) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    }
                 ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (checked && enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                tint = if (checked && enabled) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                },
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -395,8 +538,18 @@ fun SettingsSwitchRow(
                 .weight(1f)
                 .alpha(if (enabled) 1.0f else 0.4f)
         ) {
-            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-            Text(subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = subtitle,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         Switch(
