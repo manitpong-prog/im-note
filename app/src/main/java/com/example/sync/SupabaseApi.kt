@@ -43,6 +43,17 @@ interface SupabaseNotesApi {
         @Body note: SupabaseNoteDto
     ): Response<List<SupabaseNoteDto>>
 
+    @Headers(
+        "Content-Type: application/json",
+        "Prefer: return=representation,resolution=merge-duplicates"
+    )
+    @POST("rest/v1/notes?on_conflict=user_id,device_id,local_id")
+    suspend fun upsertNote(
+        @Header("apikey") apiKey: String,
+        @Header("Authorization") authorization: String,
+        @Body note: SupabaseNoteDto
+    ): Response<List<SupabaseNoteDto>>
+
     @GET("rest/v1/notes")
     suspend fun getNotes(
         @Header("apikey") apiKey: String,
