@@ -19,6 +19,7 @@ import com.example.ui.screens.NoteListScreen
 import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.RegisterScreen
 import com.example.ui.screens.SettingsScreen
+import com.example.ui.screens.TrashScreen
 import com.example.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,6 +63,17 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToLogin = {
                                     navController.navigate("login")
+                                },
+                                onNavigateToTrash = {
+                                    navController.navigate("trash")
+                                }
+                            )
+                        }
+                        composable("trash") {
+                            TrashScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = {
+                                    navController.popBackStack()
                                 }
                             )
                         }
