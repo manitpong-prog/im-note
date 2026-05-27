@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-  namespace = "com.imnote.app"
+  namespace = "com.imnotesminimal.app"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.imnote.app"
+    applicationId = "com.imnotesminimal.app"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
