@@ -126,9 +126,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     ) { notes, query, sort, colorId ->
         var result = notes
         if (colorId != null) result = result.filter { it.colorIndex == colorId }
-        if (query.isNotBlank()) {
-            result = result.filter { it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true) }
-        }
+        if (query.isNotBlank()) result = result.filter { it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true) }
         val (pinned, unpinned) = result.partition { it.isPinned }
         val comparator = when (sort) {
             SortMode.EDITED_DESC -> compareByDescending<Note> { it.updatedAt }
@@ -321,6 +319,13 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun permanentlyDeleteNote(note: Note) {
         viewModelScope.launch {
+            val accessToken = sharedPrefs.getString("supabase_access_token", null)
+            if (!note.remoteId.isNullOrBlank() && _currentUser.value != null) {
+                syncRepository.permanentlyDeleteRemoteNote(
+                    remoteId = note.remoteId,
+                    accessToken = accessToken
+                )
+            }
             repository.deleteNote(note)
         }
     }
