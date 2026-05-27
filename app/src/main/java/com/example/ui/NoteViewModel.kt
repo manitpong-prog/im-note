@@ -28,7 +28,6 @@ enum class SortMode(val displayNameTh: String) {
 }
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
-
     private val repository: NoteRepository
     private val syncRepository: NoteSyncRepository
     private val authRepository = SupabaseAuthRepository()
@@ -105,50 +104,13 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 if (currentNotes.isEmpty()) {
                     val currentTime = System.currentTimeMillis()
                     val sampleNotes = listOf(
-                        Note(
-                            title = "ช้อปปิ้งของเข้าบ้าน 🛒",
-                            content = "1. นมจืดสองกล่อง\n2. ไข่ไก่ 1 แผง\n3. ผักกาดขาวและแครอท\n4. อกไก่หมักพริกไทยดำ 1 กิโลกรัม",
-                            colorIndex = 0,
-                            isPinned = true,
-                            createdAt = currentTime - 3600000 * 24,
-                            updatedAt = currentTime - 3600000 * 12
-                        ),
-                        Note(
-                            title = "วางแผนท่องเที่ยวเชียงใหม่ ✈️",
-                            content = "วันแรก: ดอยสุเทพ, นิมมานฯ ชิลคาเฟ่ยอดนิยม\nวันที่สอง: ม่อนแจ่ม ดูทะเลหมอกยามเช้า\nวันที่สาม: ซื้อไส้อั่ว น้ำพริกหนุ่มตลาดวโรรส",
-                            colorIndex = 1,
-                            isPinned = false,
-                            createdAt = currentTime - 3600000 * 48,
-                            updatedAt = currentTime - 3600000 * 24
-                        ),
-                        Note(
-                            title = "บันทึกไอเดียแอปพยากรณ์อากาศ ☀️",
-                            content = "ดีไซน์หน้าตาแบบเรียบหรู ปล่อยอนิเมชันตามสภาพอากาศจริง\nดึงข้อมูลสภาพอากาศจาก OpenWeatherMap API\nเพิ่มกล่องแจ้งเตือนฝนล่วงหน้าและเสื้อฝนที่แนะนำ",
-                            colorIndex = 2,
-                            isPinned = false,
-                            createdAt = currentTime - 3600000 * 10,
-                            updatedAt = currentTime - 3600000 * 2
-                        ),
-                        Note(
-                            title = "ตารางออกกำลังกายประจำสัปดาห์ 🏃‍♂️",
-                            content = "จันทร์: คาร์ดิโอสลับเดินเร็ว\nพุธ: เวทเทรนนิ่งแกนกลางลำตัว\nศุกร์: โยคะเพื่อสุขภาพและหลังตึง",
-                            colorIndex = 3,
-                            isPinned = true,
-                            createdAt = currentTime - 3600000 * 2,
-                            updatedAt = currentTime
-                        ),
-                        Note(
-                            title = "สูตรทำบราวนี่ช็อกโกแลตหน้าฟิล์ม 🍫",
-                            content = "แป้งเค้กอเนกประสงค์ 100g, ผงโกโก้ 60g, เนยละลาย 120g และน้ำตาล 150g\nอบอุณหภูมิ 175 C ประมาณ 20 นาที",
-                            colorIndex = 5,
-                            isPinned = false,
-                            createdAt = currentTime - 3600000 * 72,
-                            updatedAt = currentTime - 3600000 * 48
-                        )
+                        Note(title = "ช้อปปิ้งของเข้าบ้าน 🛒", content = "1. นมจืดสองกล่อง\n2. ไข่ไก่ 1 แผง\n3. ผักกาดขาวและแครอท\n4. อกไก่หมักพริกไทยดำ 1 กิโลกรัม", colorIndex = 0, isPinned = true, createdAt = currentTime - 3600000 * 24, updatedAt = currentTime - 3600000 * 12),
+                        Note(title = "วางแผนท่องเที่ยวเชียงใหม่ ✈️", content = "วันแรก: ดอยสุเทพ, นิมมานฯ ชิลคาเฟ่ยอดนิยม\nวันที่สอง: ม่อนแจ่ม ดูทะเลหมอกยามเช้า\nวันที่สาม: ซื้อไส้อั่ว น้ำพริกหนุ่มตลาดวโรรส", colorIndex = 1, isPinned = false, createdAt = currentTime - 3600000 * 48, updatedAt = currentTime - 3600000 * 24),
+                        Note(title = "บันทึกไอเดียแอปพยากรณ์อากาศ ☀️", content = "ดีไซน์หน้าตาแบบเรียบหรู ปล่อยอนิเมชันตามสภาพอากาศจริง\nดึงข้อมูลสภาพอากาศจาก OpenWeatherMap API\nเพิ่มกล่องแจ้งเตือนฝนล่วงหน้าและเสื้อฝนที่แนะนำ", colorIndex = 2, isPinned = false, createdAt = currentTime - 3600000 * 10, updatedAt = currentTime - 3600000 * 2),
+                        Note(title = "ตารางออกกำลังกายประจำสัปดาห์ 🏃‍♂️", content = "จันทร์: คาร์ดิโอสลับเดินเร็ว\nพุธ: เวทเทรนนิ่งแกนกลางลำตัว\nศุกร์: โยคะเพื่อสุขภาพและหลังตึง", colorIndex = 3, isPinned = true, createdAt = currentTime - 3600000 * 2, updatedAt = currentTime),
+                        Note(title = "สูตรทำบราวนี่ช็อกโกแลตหน้าฟิล์ม 🍫", content = "แป้งเค้กอเนกประสงค์ 100g, ผงโกโก้ 60g, เนยละลาย 120g และน้ำตาล 150g\nอบอุณหภูมิ 175 C ประมาณ 20 นาที", colorIndex = 5, isPinned = false, createdAt = currentTime - 3600000 * 72, updatedAt = currentTime - 3600000 * 48)
                     )
-                    for (note in sampleNotes) {
-                        repository.insertNote(note)
-                    }
+                    for (note in sampleNotes) repository.insertNote(note)
                 }
             } catch (e: Exception) {
                 // Keep the app usable even if sample-note seeding fails.
@@ -163,17 +125,10 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         _selectedColorFilter
     ) { notes, query, sort, colorId ->
         var result = notes
-
-        if (colorId != null) {
-            result = result.filter { it.colorIndex == colorId }
-        }
-
+        if (colorId != null) result = result.filter { it.colorIndex == colorId }
         if (query.isNotBlank()) {
-            result = result.filter {
-                it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true)
-            }
+            result = result.filter { it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true) }
         }
-
         val (pinned, unpinned) = result.partition { it.isPinned }
         val comparator = when (sort) {
             SortMode.EDITED_DESC -> compareByDescending<Note> { it.updatedAt }
@@ -181,75 +136,37 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             SortMode.ALPHA_ASC -> compareBy { it.title.lowercase() }
             SortMode.ALPHA_DESC -> compareByDescending { it.title.lowercase() }
         }
-
         pinned.sortedWith(comparator) + unpinned.sortedWith(comparator)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun setSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
+    val deletedNotes: StateFlow<List<Note>> = repository.deletedNotesFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun setSortMode(mode: SortMode) {
-        _sortMode.value = mode
-    }
-
-    fun toggleGridView() {
-        _isGridView.value = !_isGridView.value
-    }
-
-    fun setColorFilter(colorId: Int?) {
-        _selectedColorFilter.value = colorId
-    }
-
-    fun setAutoSync(enabled: Boolean) {
-        _autoSync.value = enabled
-        sharedPrefs.edit().putBoolean("auto_sync", enabled).apply()
-    }
-
-    fun setWifiOnly(enabled: Boolean) {
-        _wifiOnly.value = enabled
-        sharedPrefs.edit().putBoolean("wifi_only", enabled).apply()
-    }
-
-    fun setDarkTheme(enabled: Boolean) {
-        _isDarkTheme.value = enabled
-        sharedPrefs.edit().putBoolean("dark_theme", enabled).apply()
-    }
-
-    fun setPinNewDefault(enabled: Boolean) {
-        _pinNewDefault.value = enabled
-        sharedPrefs.edit().putBoolean("pin_default", enabled).apply()
-    }
+    fun setSearchQuery(query: String) { _searchQuery.value = query }
+    fun setSortMode(mode: SortMode) { _sortMode.value = mode }
+    fun toggleGridView() { _isGridView.value = !_isGridView.value }
+    fun setColorFilter(colorId: Int?) { _selectedColorFilter.value = colorId }
+    fun setAutoSync(enabled: Boolean) { _autoSync.value = enabled; sharedPrefs.edit().putBoolean("auto_sync", enabled).apply() }
+    fun setWifiOnly(enabled: Boolean) { _wifiOnly.value = enabled; sharedPrefs.edit().putBoolean("wifi_only", enabled).apply() }
+    fun setDarkTheme(enabled: Boolean) { _isDarkTheme.value = enabled; sharedPrefs.edit().putBoolean("dark_theme", enabled).apply() }
+    fun setPinNewDefault(enabled: Boolean) { _pinNewDefault.value = enabled; sharedPrefs.edit().putBoolean("pin_default", enabled).apply() }
 
     fun registerWithEmail(emailInput: String, passwordInput: String, nameInput: String, onResult: (Boolean, String) -> Unit) {
         val email = emailInput.trim().lowercase()
         val password = passwordInput.trim()
         val displayName = nameInput.trim()
-
         if (email.isBlank() || password.length < 6 || displayName.isBlank()) {
             onResult(false, "กรุณากรอกข้อมูลให้ครบถ้วน และตั้งรหัสผ่านอย่างน้อย 6 ตัวอักษร")
             return
         }
-
         viewModelScope.launch {
-            val result = authRepository.signUp(email, password, displayName)
-            result.fold(
+            authRepository.signUp(email, password, displayName).fold(
                 onSuccess = { (user, session) ->
-                    saveLoggedInUser(
-                        user = user,
-                        accessToken = session?.accessToken,
-                        refreshToken = session?.refreshToken
-                    )
+                    saveLoggedInUser(user, session?.accessToken, session?.refreshToken)
                     onResult(true, "สมัครสมาชิกสำเร็จ")
                     triggerCloudSync()
                 },
-                onFailure = { error ->
-                    onResult(false, error.message ?: "สมัครสมาชิกไม่สำเร็จ")
-                }
+                onFailure = { error -> onResult(false, error.message ?: "สมัครสมาชิกไม่สำเร็จ") }
             )
         }
     }
@@ -257,27 +174,18 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     fun authenticateUser(emailInput: String, passwordInput: String, onResult: (Boolean, String) -> Unit) {
         val email = emailInput.trim().lowercase()
         val password = passwordInput.trim()
-
         if (email.isBlank() || password.isBlank()) {
             onResult(false, "กรุณากรอกอีเมลและรหัสผ่าน")
             return
         }
-
         viewModelScope.launch {
-            val result = authRepository.signIn(email, password)
-            result.fold(
+            authRepository.signIn(email, password).fold(
                 onSuccess = { (user, session) ->
-                    saveLoggedInUser(
-                        user = user,
-                        accessToken = session.accessToken,
-                        refreshToken = session.refreshToken
-                    )
+                    saveLoggedInUser(user, session.accessToken, session.refreshToken)
                     onResult(true, "เข้าสู่ระบบสำเร็จ")
                     triggerCloudSync()
                 },
-                onFailure = { error ->
-                    onResult(false, error.message ?: "เข้าสู่ระบบไม่สำเร็จ")
-                }
+                onFailure = { error -> onResult(false, error.message ?: "เข้าสู่ระบบไม่สำเร็จ") }
             )
         }
     }
@@ -285,15 +193,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     fun authenticateWithGoogle(emailInput: String, nameInput: String) {
         val email = emailInput.trim().lowercase()
         val displayName = nameInput.trim()
-
-        val loggedUser = User(
-            email = email,
-            displayName = displayName,
-            imageUrl = "G",
-            accountType = "GOOGLE"
-        )
-
-        saveLoggedInUser(loggedUser, accessToken = null, refreshToken = null)
+        saveLoggedInUser(User(email = email, displayName = displayName, imageUrl = "G", accountType = "GOOGLE"), null, null)
         triggerCloudSync()
     }
 
@@ -337,26 +237,16 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun triggerSimulatedCloudSync() {
-        triggerCloudSync()
-    }
+    fun triggerSimulatedCloudSync() { triggerCloudSync() }
 
     private fun triggerCloudSync() {
         val user = _currentUser.value
         val accessToken = sharedPrefs.getString("supabase_access_token", null)
-
-        if (user == null || !_autoSync.value) {
-            return
-        }
-
+        if (user == null || !_autoSync.value) return
         viewModelScope.launch {
             try {
                 _isSyncing.value = true
-                val result = syncRepository.syncAll(
-                    userId = user.id,
-                    accessToken = accessToken
-                )
-
+                val result = syncRepository.syncAll(user.id, accessToken)
                 if (result.isSuccess) {
                     val currentTime = System.currentTimeMillis()
                     _lastSyncTime.value = currentTime
@@ -372,30 +262,32 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val titleText = title.ifBlank { "ไม่ได้ตั้งชื่อบันทึก" }
             if (noteId == null) {
-                val newNote = Note(
-                    title = titleText,
-                    content = content,
-                    colorIndex = colorIndex,
-                    isPinned = isPinned || _pinNewDefault.value,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis(),
-                    userId = _currentUser.value?.id,
-                    syncStatus = if (_currentUser.value != null) "PENDING" else "LOCAL"
-                )
-                repository.insertNote(newNote)
-            } else {
-                val existingNote = repository.getNoteById(noteId)
-                if (existingNote != null) {
-                    val updatedNote = existingNote.copy(
+                repository.insertNote(
+                    Note(
                         title = titleText,
                         content = content,
                         colorIndex = colorIndex,
-                        isPinned = isPinned,
+                        isPinned = isPinned || _pinNewDefault.value,
+                        createdAt = System.currentTimeMillis(),
                         updatedAt = System.currentTimeMillis(),
-                        userId = existingNote.userId ?: _currentUser.value?.id,
-                        syncStatus = if (_currentUser.value != null) "PENDING" else existingNote.syncStatus
+                        userId = _currentUser.value?.id,
+                        syncStatus = if (_currentUser.value != null) "PENDING" else "LOCAL"
                     )
-                    repository.updateNote(updatedNote)
+                )
+            } else {
+                val existingNote = repository.getNoteById(noteId)
+                if (existingNote != null) {
+                    repository.updateNote(
+                        existingNote.copy(
+                            title = titleText,
+                            content = content,
+                            colorIndex = colorIndex,
+                            isPinned = isPinned,
+                            updatedAt = System.currentTimeMillis(),
+                            userId = existingNote.userId ?: _currentUser.value?.id,
+                            syncStatus = if (_currentUser.value != null) "PENDING" else existingNote.syncStatus
+                        )
+                    )
                 }
             }
             triggerCloudSync()
@@ -403,51 +295,46 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    suspend fun getNoteById(noteId: Int): Note? {
-        return repository.getNoteById(noteId)
-    }
+    suspend fun getNoteById(noteId: Int): Note? = repository.getNoteById(noteId)
 
     fun deleteNote(note: Note) {
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             val shouldSyncDelete = _currentUser.value != null && note.remoteId != null
             val syncStatus = if (shouldSyncDelete) "PENDING" else "LOCAL_DELETED"
-
             if (note.remoteId == null && _currentUser.value == null) {
                 repository.deleteNote(note)
             } else {
-                repository.softDeleteNote(
-                    localId = note.id,
-                    deletedAt = now,
-                    updatedAt = now,
-                    syncStatus = syncStatus
-                )
+                repository.softDeleteNote(note.id, now, now, syncStatus)
             }
-
             triggerCloudSync()
+        }
+    }
+
+    fun restoreNote(note: Note) {
+        viewModelScope.launch {
+            val syncStatus = if (_currentUser.value != null) "PENDING" else "LOCAL"
+            repository.restoreNote(note.id, System.currentTimeMillis(), syncStatus)
+            triggerCloudSync()
+        }
+    }
+
+    fun permanentlyDeleteNote(note: Note) {
+        viewModelScope.launch {
+            repository.deleteNote(note)
         }
     }
 
     fun togglePinState(note: Note) {
         viewModelScope.launch {
-            val updated = note.copy(
-                isPinned = !note.isPinned,
-                updatedAt = System.currentTimeMillis(),
-                syncStatus = if (_currentUser.value != null) "PENDING" else note.syncStatus
-            )
-            repository.updateNote(updated)
+            repository.updateNote(note.copy(isPinned = !note.isPinned, updatedAt = System.currentTimeMillis(), syncStatus = if (_currentUser.value != null) "PENDING" else note.syncStatus))
             triggerCloudSync()
         }
     }
 
     fun changeNoteColor(note: Note, newColorIndex: Int) {
         viewModelScope.launch {
-            val updated = note.copy(
-                colorIndex = newColorIndex,
-                updatedAt = System.currentTimeMillis(),
-                syncStatus = if (_currentUser.value != null) "PENDING" else note.syncStatus
-            )
-            repository.updateNote(updated)
+            repository.updateNote(note.copy(colorIndex = newColorIndex, updatedAt = System.currentTimeMillis(), syncStatus = if (_currentUser.value != null) "PENDING" else note.syncStatus))
             triggerCloudSync()
         }
     }
