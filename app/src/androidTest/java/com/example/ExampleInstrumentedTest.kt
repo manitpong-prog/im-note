@@ -14,6 +14,6 @@ class ExampleInstrumentedTest {
   @Test
   fun useAppContext() {
     val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-    assertEquals("com.manitpong.imnote", appContext.packageName)
+    assertEquals("com.imnote.app", appContext.packageName)
   }
 }
