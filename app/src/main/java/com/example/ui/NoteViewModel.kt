@@ -1,4 +1,4 @@
-package com.imnotesminimal.app.ui
+package com.example.ui
 
 import android.app.Application
 import android.content.Context
@@ -24,6 +24,12 @@ enum class SortMode(val displayNameTh: String) {
     EDITED_ASC("แก้ไขล่าสุด (เก่า -> ใหม่)"),
     ALPHA_ASC("ตามตัวอักษร (A-Z / ก-ฮ)"),
     ALPHA_DESC("ตามตัวอักษร (Z-A / ฮ-ก)")
+}
+
+enum class SearchMode(val displayNameTh: String) {
+    ALL("ทั้งหมด"),
+    TITLE("ชื่อเรื่อง"),
+    CONTENT("เนื้อหา")
 }
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
@@ -55,6 +61,9 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _searchMode = MutableStateFlow(SearchMode.ALL)
+    val searchMode: StateFlow<SearchMode> = _searchMode.asStateFlow()
 
     private val _sortMode = MutableStateFlow(SortMode.EDITED_DESC)
     val sortMode: StateFlow<SortMode> = _sortMode.asStateFlow()
@@ -98,12 +107,27 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     val filteredAndSortedNotes: StateFlow<List<Note>> = combine(
         repository.allNotesFlow,
         _searchQuery,
+        _searchMode,
         _sortMode,
         _selectedColorFilter
-    ) { notes, query, sort, colorId ->
+    ) { notes, query, searchMode, sort, colorId ->
         var result = notes
-        if (colorId != null) result = result.filter { it.colorIndex == colorId }
-        if (query.isNotBlank()) result = result.filter { it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true) }
+
+        if (colorId != null) {
+            result = result.filter { it.colorIndex == colorId }
+        }
+
+        val keyword = query.trim()
+        if (keyword.isNotBlank()) {
+            result = result.filter { note ->
+                when (searchMode) {
+                    SearchMode.ALL -> note.title.contains(keyword, ignoreCase = true) || note.content.contains(keyword, ignoreCase = true)
+                    SearchMode.TITLE -> note.title.contains(keyword, ignoreCase = true)
+                    SearchMode.CONTENT -> note.content.contains(keyword, ignoreCase = true)
+                }
+            }
+        }
+
         val (pinned, unpinned) = result.partition { it.isPinned }
         val comparator = when (sort) {
             SortMode.EDITED_DESC -> compareByDescending<Note> { it.updatedAt }
@@ -111,6 +135,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             SortMode.ALPHA_ASC -> compareBy { it.title.lowercase() }
             SortMode.ALPHA_DESC -> compareByDescending { it.title.lowercase() }
         }
+
         pinned.sortedWith(comparator) + unpinned.sortedWith(comparator)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -118,6 +143,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setSearchQuery(query: String) { _searchQuery.value = query }
+    fun setSearchMode(mode: SearchMode) { _searchMode.value = mode }
     fun setSortMode(mode: SortMode) { _sortMode.value = mode }
     fun toggleGridView() { _isGridView.value = !_isGridView.value }
     fun setColorFilter(colorId: Int?) { _selectedColorFilter.value = colorId }

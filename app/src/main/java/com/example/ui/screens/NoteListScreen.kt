@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.Note
 import com.example.ui.NoteViewModel
+import com.example.ui.SearchMode
 import com.example.ui.SortMode
 import com.example.ui.theme.NoteColors
 import java.text.SimpleDateFormat
@@ -43,6 +44,7 @@ fun NoteListScreen(
 ) {
     val notes by viewModel.filteredAndSortedNotes.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchMode by viewModel.searchMode.collectAsState()
     val currentSortMode by viewModel.sortMode.collectAsState()
     val isGridView by viewModel.isGridView.collectAsState()
     val activeColorFilter by viewModel.selectedColorFilter.collectAsState()
@@ -53,6 +55,8 @@ fun NoteListScreen(
     var dismissPromoBanner by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf<Note?>(null) }
+
+    val hasSearchOrFilter = searchQuery.isNotBlank() || activeColorFilter != null
 
     Scaffold(
         topBar = {
@@ -170,7 +174,16 @@ fun NoteListScreen(
             TextField(
                 value = searchQuery,
                 onValueChange = { viewModel.setSearchQuery(it) },
-                placeholder = { Text("ค้นหาจากชื่อเรื่อง หรือเนื้อหา...", fontSize = 14.sp) },
+                placeholder = {
+                    Text(
+                        text = when (searchMode) {
+                            SearchMode.ALL -> "ค้นหาจากชื่อเรื่องหรือเนื้อหา..."
+                            SearchMode.TITLE -> "ค้นหาเฉพาะชื่อเรื่อง..."
+                            SearchMode.CONTENT -> "ค้นหาเฉพาะเนื้อหา..."
+                        },
+                        fontSize = 14.sp
+                    )
+                },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "ค้นหา") },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -194,6 +207,18 @@ fun NoteListScreen(
                     .testTag("search_input_field")
             )
 
+            SearchModeRow(
+                selectedMode = searchMode,
+                resultCount = notes.size,
+                hasSearchOrFilter = hasSearchOrFilter,
+                onModeSelected = { viewModel.setSearchMode(it) },
+                onClearAll = {
+                    viewModel.setSearchQuery("")
+                    viewModel.setColorFilter(null)
+                    viewModel.setSearchMode(SearchMode.ALL)
+                }
+            )
+
             AnimatedVisibility(
                 visible = isSyncing,
                 enter = fadeIn() + expandVertically(),
@@ -213,7 +238,7 @@ fun NoteListScreen(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "กำลังอัปเดตสถานะสำรองข้อมูลในเครื่อง...",
+                        text = "กำลังซิงค์ข้อมูล...",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.primary
@@ -258,7 +283,7 @@ fun NoteListScreen(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "โน้ตถูกบันทึกไว้ในเครื่องนี้ก่อน ระบบบัญชีเป็นโหมดทดลองสำหรับทดสอบ UI",
+                                text = "โน้ตถูกบันทึกไว้ในเครื่องนี้ก่อน เข้าสู่ระบบเพื่อสำรองและซิงค์ออนไลน์",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                             )
@@ -324,10 +349,11 @@ fun NoteListScreen(
 
             if (notes.isEmpty()) {
                 EmptyNotesState(
-                    hasFilter = searchQuery.isNotEmpty() || activeColorFilter != null,
+                    hasFilter = hasSearchOrFilter,
                     onClearFilters = {
                         viewModel.setSearchQuery("")
                         viewModel.setColorFilter(null)
+                        viewModel.setSearchMode(SearchMode.ALL)
                     }
                 )
             } else {
@@ -358,7 +384,7 @@ fun NoteListScreen(
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = null },
             title = { Text("ลบบันทึก?") },
-            text = { Text("ต้องการลบบันทึก '${note.title}' ใช่ไหม? เมื่อลบแล้วจะไม่สามารถย้อนกลับได้") },
+            text = { Text("ต้องการลบบันทึก '${note.title}' ใช่ไหม? บันทึกจะถูกย้ายไปถังขยะก่อน") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -376,6 +402,53 @@ fun NoteListScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun SearchModeRow(
+    selectedMode: SearchMode,
+    resultCount: Int,
+    hasSearchOrFilter: Boolean,
+    onModeSelected: (SearchMode) -> Unit,
+    onClearAll: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SearchMode.values().forEach { mode ->
+                FilterChip(
+                    selected = selectedMode == mode,
+                    onClick = { onModeSelected(mode) },
+                    label = { Text(mode.displayNameTh, fontSize = 11.sp) }
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            if (hasSearchOrFilter) {
+                TextButton(onClick = onClearAll, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    Text("ล้าง", fontSize = 11.sp)
+                }
+            }
+        }
+
+        if (hasSearchOrFilter) {
+            Text(
+                text = "พบ $resultCount รายการ",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
+            )
+        }
     }
 }
 
@@ -618,7 +691,7 @@ fun EmptyNotesState(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = if (hasFilter) "ลองปรับคำค้นหาหรือตัวกรองสีใหม่อีกครั้ง" else "เริ่มจดไอเดีย งาน หรือรายการที่ต้องทำได้เลย",
+                text = if (hasFilter) "ลองปรับคำค้นหา ตัวเลือกค้นหา หรือตัวกรองสีใหม่อีกครั้ง" else "เริ่มจดไอเดีย งาน หรือรายการที่ต้องทำได้เลย",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center

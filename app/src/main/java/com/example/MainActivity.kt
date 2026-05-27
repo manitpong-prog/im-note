@@ -13,10 +13,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.imnotesminimal.app.ui.NoteViewModel
+import com.example.ui.NoteViewModel
+import com.example.ui.screens.AboutPrivacyScreen
+import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.NoteEditorScreen
 import com.example.ui.screens.NoteListScreen
-import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.RegisterScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.TrashScreen
@@ -66,12 +67,22 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToTrash = {
                                     navController.navigate("trash")
+                                },
+                                onNavigateToAboutPrivacy = {
+                                    navController.navigate("about_privacy")
                                 }
                             )
                         }
                         composable("trash") {
                             TrashScreen(
                                 viewModel = viewModel,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+                        composable("about_privacy") {
+                            AboutPrivacyScreen(
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }

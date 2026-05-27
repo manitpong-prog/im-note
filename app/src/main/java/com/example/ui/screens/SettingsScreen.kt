@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudQueue
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Pin
@@ -44,6 +45,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToTrash: () -> Unit,
+    onNavigateToAboutPrivacy: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
@@ -171,7 +173,7 @@ fun SettingsScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "ระบบออกแบบให้ใช้ได้ทั้งออฟไลน์และออนไลน์: โน้ตจะอยู่ในเครื่องเสมอ และบัญชีจะใช้สำหรับสำรอง/ซิงค์อัตโนมัติเมื่อเชื่อมระบบออนไลน์ครบ",
+                            text = "ระบบออกแบบให้ใช้ได้ทั้งออฟไลน์และออนไลน์: โน้ตจะอยู่ในเครื่องเสมอ และบัญชีจะใช้สำหรับสำรอง/ซิงค์อัตโนมัติ",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -256,6 +258,29 @@ fun SettingsScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text("ถังขยะ", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                         Text("ดู กู้คืน หรือลบถาวรโน้ตที่เคยลบไปแล้ว", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+
+            SectionTitle("ข้อมูลแอพ")
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToAboutPrivacy() }
+                        .padding(16.dp)
+                        .testTag("settings_about_privacy_row")
+                ) {
+                    Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("เกี่ยวกับและความเป็นส่วนตัว", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text("ข้อมูลแอพ การจัดเก็บโน้ต การซิงค์ และการลบข้อมูล", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
