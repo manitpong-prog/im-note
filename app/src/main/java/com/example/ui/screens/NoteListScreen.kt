@@ -49,10 +49,8 @@ fun NoteListScreen(
 
     val currentUser by viewModel.currentUser.collectAsState()
     val isSyncing by viewModel.isSyncing.collectAsState()
-    val lastSyncTime by viewModel.lastSyncTime.collectAsState()
 
     var dismissPromoBanner by remember { mutableStateOf(false) }
-
     var showSortMenu by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf<Note?>(null) }
 
@@ -61,13 +59,12 @@ fun NoteListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "iM Notes Minimal",
+                        text = "iM Note",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 actions = {
-                    // List vs Grid toggle action
                     IconButton(
                         onClick = { viewModel.toggleGridView() },
                         modifier = Modifier.testTag("layout_toggle_button")
@@ -78,7 +75,6 @@ fun NoteListScreen(
                         )
                     }
 
-                    // Sort menu anchor button
                     IconButton(
                         onClick = { showSortMenu = true },
                         modifier = Modifier.testTag("sort_menu_button")
@@ -92,12 +88,7 @@ fun NoteListScreen(
                             onDismissRequest = { showSortMenu = false }
                         ) {
                             DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.ArrowDownward,
-                                        contentDescription = null
-                                    )
-                                },
+                                leadingIcon = { Icon(Icons.Default.ArrowDownward, contentDescription = null) },
                                 text = { Text(SortMode.EDITED_DESC.displayNameTh) },
                                 onClick = {
                                     viewModel.setSortMode(SortMode.EDITED_DESC)
@@ -106,12 +97,7 @@ fun NoteListScreen(
                                 modifier = Modifier.testTag("sort_newest_edited")
                             )
                             DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.ArrowUpward,
-                                        contentDescription = null
-                                    )
-                                },
+                                leadingIcon = { Icon(Icons.Default.ArrowUpward, contentDescription = null) },
                                 text = { Text(SortMode.EDITED_ASC.displayNameTh) },
                                 onClick = {
                                     viewModel.setSortMode(SortMode.EDITED_ASC)
@@ -120,12 +106,7 @@ fun NoteListScreen(
                                 modifier = Modifier.testTag("sort_oldest_edited")
                             )
                             DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.SortByAlpha,
-                                        contentDescription = null
-                                    )
-                                },
+                                leadingIcon = { Icon(Icons.Default.SortByAlpha, contentDescription = null) },
                                 text = { Text(SortMode.ALPHA_ASC.displayNameTh) },
                                 onClick = {
                                     viewModel.setSortMode(SortMode.ALPHA_ASC)
@@ -134,12 +115,7 @@ fun NoteListScreen(
                                 modifier = Modifier.testTag("sort_alpha_asc")
                             )
                             DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.SortByAlpha,
-                                        contentDescription = null
-                                    )
-                                },
+                                leadingIcon = { Icon(Icons.Default.SortByAlpha, contentDescription = null) },
                                 text = { Text(SortMode.ALPHA_DESC.displayNameTh) },
                                 onClick = {
                                     viewModel.setSortMode(SortMode.ALPHA_DESC)
@@ -150,7 +126,6 @@ fun NoteListScreen(
                         }
                     }
 
-                    // Settings & Avatar anchor button
                     IconButton(
                         onClick = onNavigateToSettings,
                         modifier = Modifier.testTag("settings_menu_button")
@@ -208,7 +183,6 @@ fun NoteListScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // 1. Search Bar Interface
             TextField(
                 value = searchQuery,
                 onValueChange = { viewModel.setSearchQuery(it) },
@@ -236,7 +210,6 @@ fun NoteListScreen(
                     .testTag("search_input_field")
             )
 
-            // Dynamic Sync Progress banner
             AnimatedVisibility(
                 visible = isSyncing,
                 enter = fadeIn() + expandVertically(),
@@ -256,7 +229,7 @@ fun NoteListScreen(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "กำลังซิงค์บันทึกลงฐานรากข้อมูลคลาวด์...",
+                        text = "กำลังอัปเดตสถานะสำรองข้อมูลในเครื่อง...",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.primary
@@ -264,7 +237,6 @@ fun NoteListScreen(
                 }
             }
 
-            // Cloud Backup Promo Banner (shown only when guest and banner is not dismissed)
             AnimatedVisibility(
                 visible = currentUser == null && !dismissPromoBanner,
                 enter = fadeIn() + expandVertically(),
@@ -288,7 +260,7 @@ fun NoteListScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.CloudQueue,
+                            imageVector = Icons.Default.Info,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(24.dp)
@@ -296,13 +268,13 @@ fun NoteListScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "สำรองข้อมูลฟรีผ่านระบบคลาวด์! ☁️",
+                                text = "โหมดใช้งานในเครื่อง",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "เข้าสู่ระบบเพื่อซิงค์ข้อมูลระหว่างเครื่องและป้องกันบันทึกสูญหาย",
+                                text = "โน้ตถูกบันทึกไว้ในเครื่องนี้ก่อน ระบบบัญชีเป็นโหมดทดลองสำหรับทดสอบ UI",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                             )
@@ -322,13 +294,11 @@ fun NoteListScreen(
                 }
             }
 
-            // 2. Color category filter bar
             ColorFilterRow(
                 selectedColor = activeColorFilter,
                 onColorSelected = { viewModel.setColorFilter(it) }
             )
 
-            // Current sorting visual summary
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -368,7 +338,6 @@ fun NoteListScreen(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // 3. Grid vs List View Content
             if (notes.isEmpty()) {
                 EmptyNotesState(
                     hasFilter = searchQuery.isNotEmpty() || activeColorFilter != null,
@@ -401,12 +370,11 @@ fun NoteListScreen(
         }
     }
 
-    // Delete Confirmation Dialog
     showDeleteConfirmDialog?.let { note ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = null },
             title = { Text("ลบบันทึก?") },
-            text = { Text("คุณแน่ใจหรือไม่ว่าต้องการลบบันทึก '${note.title}' นี้? ไม่สามารถยกเลิกได้ในภายหลัง") },
+            text = { Text("ต้องการลบบันทึก '${note.title}' ใช่ไหม? เมื่อลบแล้วจะไม่สามารถย้อนกลับได้") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -415,7 +383,7 @@ fun NoteListScreen(
                     },
                     modifier = Modifier.testTag("dialog_confirm_delete")
                 ) {
-                    Text("ลบออก", color = MaterialTheme.colorScheme.error)
+                    Text("ลบ", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -440,7 +408,6 @@ fun ColorFilterRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // "ALL" Option Badge
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -458,7 +425,6 @@ fun ColorFilterRow(
             )
         }
 
-        // Individual Colors representers
         NoteColors.profiles.forEach { profile ->
             Box(
                 modifier = Modifier
@@ -549,9 +515,7 @@ fun NoteCardItem(
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colorProfile.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = colorProfile.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier
             .fillMaxWidth()
@@ -567,7 +531,6 @@ fun NoteCardItem(
                 .fillMaxWidth()
                 .padding(14.dp)
         ) {
-            // Note Title + Pin Indicator Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -590,7 +553,7 @@ fun NoteCardItem(
                         .testTag("pin_button_${note.id}")
                 ) {
                     Icon(
-                        imageVector = if (note.isPinned) Icons.Default.PushPin else Icons.Default.PushPin,
+                        imageVector = Icons.Default.PushPin,
                         contentDescription = if (note.isPinned) "ถอนหมุด" else "ปักหมุด",
                         tint = if (note.isPinned) MaterialTheme.colorScheme.primary else colorProfile.textSecondaryOnSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
@@ -600,9 +563,8 @@ fun NoteCardItem(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Body content preview
             Text(
-                text = note.content.ifBlank { "บล็อกข้อความว่างเปล่า" },
+                text = note.content.ifBlank { "บันทึกนี้ยังไม่มีเนื้อหา" },
                 fontSize = 13.sp,
                 color = colorProfile.textSecondaryOnSurface,
                 maxLines = 3,
@@ -612,13 +574,11 @@ fun NoteCardItem(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Action labels + Timestamp Footer row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Secondary visual aid badge
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
@@ -633,7 +593,6 @@ fun NoteCardItem(
                     )
                 }
 
-                // Date label
                 Text(
                     text = formattedDate,
                     fontSize = 10.sp,
@@ -668,14 +627,14 @@ fun EmptyNotesState(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = if (hasFilter) "ไม่พบผลลัพธ์การค้นหา" else "ยังไม่มีโน้ตสะสม",
+                text = if (hasFilter) "ไม่พบผลลัพธ์การค้นหา" else "ยังไม่มีโน้ต",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = if (hasFilter) "ลองปรับคำค้นหาหรือตัวกรองสีของคุณใหม่อีกครั้ง" else "เริ่มจดบันทึกความคิด แฟ้มงาน หรือตารางเวลากันเถอะ!",
+                text = if (hasFilter) "ลองปรับคำค้นหาหรือตัวกรองสีใหม่อีกครั้ง" else "เริ่มจดไอเดีย งาน หรือรายการที่ต้องทำได้เลย",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -691,7 +650,7 @@ fun EmptyNotesState(
             } else {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "กดปุ่มบวกสีสันสดใสที่มุมขวาล่างได้เลย!",
+                    text = "กดปุ่ม + มุมขวาล่างเพื่อเพิ่มโน้ตใหม่",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
