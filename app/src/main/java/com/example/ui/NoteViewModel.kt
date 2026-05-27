@@ -409,7 +409,21 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteNote(note: Note) {
         viewModelScope.launch {
-            repository.deleteNote(note)
+            val now = System.currentTimeMillis()
+            val shouldSyncDelete = _currentUser.value != null && note.remoteId != null
+            val syncStatus = if (shouldSyncDelete) "PENDING" else "LOCAL_DELETED"
+
+            if (note.remoteId == null && _currentUser.value == null) {
+                repository.deleteNote(note)
+            } else {
+                repository.softDeleteNote(
+                    localId = note.id,
+                    deletedAt = now,
+                    updatedAt = now,
+                    syncStatus = syncStatus
+                )
+            }
+
             triggerCloudSync()
         }
     }
