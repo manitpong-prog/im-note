@@ -1,4 +1,4 @@
-package com.example
+package com.imnotesminimal.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -13,13 +13,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.ui.NoteViewModel
-import com.example.ui.screens.NoteEditorScreen
-import com.example.ui.screens.NoteListScreen
-import com.example.ui.screens.LoginScreen
-import com.example.ui.screens.RegisterScreen
-import com.example.ui.screens.SettingsScreen
-import com.example.ui.theme.MyApplicationTheme
+import com.imnotesminimal.app.ui.NoteViewModel
+import com.imnotesminimal.app.ui.screens.NoteEditorScreen
+import com.imnotesminimal.app.ui.screens.NoteListScreen
+import com.imnotesminimal.app.ui.screens.LoginScreen
+import com.imnotesminimal.app.ui.screens.RegisterScreen
+import com.imnotesminimal.app.ui.screens.SettingsScreen
+import com.imnotesminimal.app.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 
@@ -86,7 +86,6 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 },
                                 onRegisterSuccess = {
-                                    // Pop to register, and since register was opened from login, pop also to Settings
                                     navController.popBackStack("settings", inclusive = false)
                                 }
                             )
@@ -103,7 +102,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val noteIdStr = backStackEntry.arguments?.getString("noteId")
                             val noteId = noteIdStr?.toIntOrNull()
-                            
+
                             NoteEditorScreen(
                                 noteId = noteId,
                                 viewModel = viewModel,
