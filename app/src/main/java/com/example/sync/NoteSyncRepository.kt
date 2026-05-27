@@ -52,16 +52,25 @@ class NoteSyncRepository(
             val authorization = SupabaseService.bearer(accessToken)
 
             for (note in pendingNotes) {
-                val dto = note.toSupabaseDto(
+                val body = note.toSupabaseBody(
                     userId = userId,
                     deviceId = deviceId
                 )
 
-                val response = api.upsertNote(
-                    apiKey = SupabaseConfig.anonKey,
-                    authorization = authorization,
-                    note = dto
-                )
+                val response = if (!note.remoteId.isNullOrBlank()) {
+                    api.updateNoteByRemoteId(
+                        apiKey = SupabaseConfig.anonKey,
+                        authorization = authorization,
+                        remoteIdFilter = "eq.${note.remoteId}",
+                        note = body
+                    )
+                } else {
+                    api.upsertNote(
+                        apiKey = SupabaseConfig.anonKey,
+                        authorization = authorization,
+                        note = body
+                    )
+                }
 
                 if (response.isSuccessful) {
                     val remoteNote = response.body()?.firstOrNull()
@@ -187,21 +196,62 @@ class NoteSyncRepository(
         }
     }
 
-    private fun Note.toSupabaseDto(userId: String, deviceId: String): SupabaseNoteDto {
-        return SupabaseNoteDto(
-            id = remoteId,
-            userId = userId,
-            localId = id,
-            title = title,
-            content = content,
-            colorIndex = colorIndex,
-            isPinned = isPinned,
-            clientCreatedAt = createdAt.toIso8601(),
-            clientUpdatedAt = updatedAt.toIso8601(),
-            deletedAt = deletedAt?.toIso8601(),
-            syncVersion = 1,
-            deviceId = deviceId
+    suspend fun permanentlyDeleteRemoteNote(
+        remoteId: String?,
+        accessToken: String?
+    ): Result<Unit> {
+        if (remoteId.isNullOrBlank()) {
+            return Result.success(Unit)
+        }
+
+        if (accessToken.isNullOrBlank()) {
+            return Result.failure(IllegalStateException("ยังไม่พบ session สำหรับลบโน้ตออนไลน์ กรุณาเข้าสู่ระบบใหม่"))
+        }
+
+        if (!SupabaseConfig.isConfigured) {
+            return Result.failure(IllegalStateException("ยังไม่ได้ตั้งค่า Supabase URL และ Anon Key"))
+        }
+
+        val api = SupabaseService.notesApi
+            ?: return Result.failure(IllegalStateException("ไม่สามารถสร้าง Supabase Notes API ได้"))
+
+        return try {
+            val response = api.deleteNoteByRemoteId(
+                apiKey = SupabaseConfig.anonKey,
+                authorization = SupabaseService.bearer(accessToken),
+                remoteIdFilter = "eq.$remoteId"
+            )
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(IllegalStateException(toFriendlySyncError(response.code(), response.errorBody()?.string())))
+            }
+        } catch (e: Exception) {
+            Result.failure(IllegalStateException(toFriendlyNetworkError(e)))
+        }
+    }
+
+    private fun Note.toSupabaseBody(userId: String, deviceId: String): Map<String, Any?> {
+        val body = linkedMapOf<String, Any?>(
+            "user_id" to userId,
+            "local_id" to id,
+            "title" to title,
+            "content" to content,
+            "color_index" to colorIndex,
+            "is_pinned" to isPinned,
+            "client_created_at" to createdAt.toIso8601(),
+            "client_updated_at" to updatedAt.toIso8601(),
+            "deleted_at" to deletedAt?.toIso8601(),
+            "sync_version" to 1,
+            "device_id" to deviceId
         )
+
+        if (!remoteId.isNullOrBlank()) {
+            body["id"] = remoteId
+        }
+
+        return body
     }
 
     private fun Long.toIso8601(): String {
