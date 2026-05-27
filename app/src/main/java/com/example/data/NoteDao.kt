@@ -16,11 +16,17 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: Int): Note?
 
+    @Query("SELECT * FROM notes WHERE deletedAt IS NULL AND (remoteId IS NULL OR syncStatus != 'SYNCED')")
+    suspend fun getNotesNeedingSync(): List<Note>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: Note): Long
 
     @Update
     suspend fun updateNote(note: Note): Int
+
+    @Query("UPDATE notes SET remoteId = :remoteId, userId = :userId, syncStatus = 'SYNCED' WHERE id = :localId")
+    suspend fun markNoteSynced(localId: Int, remoteId: String, userId: String)
 
     @Delete
     suspend fun deleteNote(note: Note)
