@@ -14,12 +14,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.imnotesminimal.app.ui.NoteViewModel
-import com.imnotesminimal.app.ui.screens.NoteEditorScreen
-import com.imnotesminimal.app.ui.screens.NoteListScreen
-import com.imnotesminimal.app.ui.screens.LoginScreen
-import com.imnotesminimal.app.ui.screens.RegisterScreen
-import com.imnotesminimal.app.ui.screens.SettingsScreen
-import com.imnotesminimal.app.ui.theme.MyApplicationTheme
+import com.example.ui.screens.NoteEditorScreen
+import com.example.ui.screens.NoteListScreen
+import com.example.ui.screens.LoginScreen
+import com.example.ui.screens.RegisterScreen
+import com.example.ui.screens.SettingsScreen
+import com.example.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 
