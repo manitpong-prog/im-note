@@ -103,7 +103,7 @@ fun SettingsScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("ใช้งานออฟไลน์ได้ทันที", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                 Text(
-                                    "โน้ตถูกเก็บไว้ในเครื่องนี้ก่อน ถ้าล็อกอินในอนาคตจะใช้สำหรับสำรองและซิงค์ออนไลน์",
+                                    "ไม่ต้องสร้างบัญชีก็จดโน้ตได้ ข้อมูลจะอยู่ในเครื่องนี้ และเมื่อเข้าสู่ระบบจะสามารถสำรองและซิงค์ออนไลน์ได้",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -140,7 +140,7 @@ fun SettingsScreen(
                                 Text(user.displayName, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                 Text(user.email, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
-                                    if (user.accountType == "GOOGLE") "บัญชี Google (โหมดทดสอบ)" else "บัญชีอีเมล (โหมดทดสอบ)",
+                                    if (user.accountType == "GOOGLE") "บัญชี Google" else "บัญชีอีเมล",
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.SemiBold
@@ -159,12 +159,12 @@ fun SettingsScreen(
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("สถานะออนไลน์", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                                Text("สถานะซิงค์", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
                                 Text(
                                     text = when {
-                                        isSyncing -> "กำลังอัปเดตสถานะซิงค์..."
-                                        lastSyncTime > 0 -> "อัปเดตล่าสุด: " + SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date(lastSyncTime))
-                                        else -> "ยังไม่เคยอัปเดตสถานะซิงค์"
+                                        isSyncing -> "กำลังซิงค์ข้อมูล..."
+                                        lastSyncTime > 0 -> "ซิงค์ล่าสุด: " + SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date(lastSyncTime))
+                                        else -> "ยังไม่เคยซิงค์"
                                     },
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -181,14 +181,14 @@ fun SettingsScreen(
                                 } else {
                                     Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("อัปเดต", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text("ซิงค์", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "หมายเหตุ: ระบบบัญชีและซิงค์ยังเป็นโครงทดสอบ UI ข้อมูลโน้ตหลักยังเก็บในเครื่อง",
+                            "ระบบออกแบบให้ใช้ได้ทั้งออฟไลน์และออนไลน์: โน้ตจะอยู่ในเครื่องเสมอ และบัญชีจะใช้สำหรับสำรอง/ซิงค์อัตโนมัติเมื่อเชื่อมระบบออนไลน์ครบ",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -209,8 +209,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSwitchRow(
                         icon = Icons.Default.Sync,
-                        title = "เตรียมซิงค์อัตโนมัติ",
-                        subtitle = "เมื่อเชื่อมระบบออนไลน์จริง โน้ตใหม่หรือโน้ตที่แก้ไขจะถูกเตรียมส่งขึ้นบัญชีของคุณ",
+                        title = "ซิงค์อัตโนมัติ",
+                        subtitle = "เมื่อเข้าสู่ระบบ โน้ตใหม่และโน้ตที่แก้ไขจะถูกซิงค์กับบัญชีของคุณอัตโนมัติ",
                         checked = autoSync,
                         onCheckedChange = { viewModel.setAutoSync(it) },
                         enabled = currentUser != null,
@@ -220,7 +220,7 @@ fun SettingsScreen(
                     SettingsSwitchRow(
                         icon = Icons.Default.Wifi,
                         title = "ซิงค์เฉพาะ Wi-Fi",
-                        subtitle = "ใช้สำหรับควบคุมการซิงค์ออนไลน์ในอนาคต เพื่อลดการใช้อินเทอร์เน็ตมือถือ",
+                        subtitle = "ช่วยประหยัดอินเทอร์เน็ตมือถือ โดยให้ซิงค์ออนไลน์เมื่อเชื่อมต่อ Wi-Fi เท่านั้น",
                         checked = wifiOnly,
                         onCheckedChange = { viewModel.setWifiOnly(it) },
                         enabled = currentUser != null,
@@ -280,7 +280,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("ออกจากระบบ", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                Text("กลับไปใช้งานแบบออฟไลน์ในเครื่องนี้", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("โน้ตในเครื่องยังอยู่ และสามารถใช้งานออฟไลน์ต่อได้", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -305,7 +305,7 @@ fun SettingsScreen(
             }
 
             Text(
-                text = "iM Notes Minimal v1.0.0 • Offline-first note app",
+                text = "iM Notes Minimal v1.0.0 • Offline-first + Online Sync",
                 fontWeight = FontWeight.Bold,
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
@@ -322,7 +322,7 @@ fun SettingsScreen(
             onDismissRequest = { showDeleteConfirmDialog = false },
             icon = { Icon(Icons.Default.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("ล้างข้อมูลทั้งหมด?", fontWeight = FontWeight.Bold) },
-            text = { Text("โน้ตทั้งหมด บัญชีทดสอบ และค่าตั้งค่าในเครื่องนี้จะถูกลบออก ถ้ากดยืนยันแล้วจะกู้คืนไม่ได้") },
+            text = { Text("โน้ตทั้งหมด บัญชี และค่าตั้งค่าในเครื่องนี้จะถูกลบออก ถ้ากดยืนยันแล้วจะกู้คืนไม่ได้") },
             confirmButton = {
                 Button(
                     onClick = {
