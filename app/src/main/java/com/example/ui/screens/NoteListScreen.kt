@@ -130,27 +130,11 @@ fun NoteListScreen(
                         onClick = onNavigateToSettings,
                         modifier = Modifier.testTag("settings_menu_button")
                     ) {
-                        if (currentUser != null) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = currentUser?.displayName?.take(1)?.uppercase() ?: "U",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "การตั้งค่าใช้งาน"
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "การตั้งค่าใช้งาน",
+                            modifier = Modifier.size(26.dp)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
