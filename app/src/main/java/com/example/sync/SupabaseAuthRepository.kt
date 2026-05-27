@@ -33,10 +33,10 @@ class SupabaseAuthRepository {
                     )
                 )
             } else {
-                Result.failure(IllegalStateException(response.errorBody()?.string()?.ifBlank { null } ?: "สมัครสมาชิกไม่สำเร็จ"))
+                Result.failure(IllegalStateException(toFriendlyAuthError(response.code(), response.errorBody()?.string(), isRegister = true)))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(IllegalStateException(toFriendlyNetworkError(e)))
         }
     }
 
@@ -71,10 +71,63 @@ class SupabaseAuthRepository {
                     ) to session
                 )
             } else {
-                Result.failure(IllegalStateException(response.errorBody()?.string()?.ifBlank { null } ?: "เข้าสู่ระบบไม่สำเร็จ"))
+                Result.failure(IllegalStateException(toFriendlyAuthError(response.code(), response.errorBody()?.string(), isRegister = false)))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(IllegalStateException(toFriendlyNetworkError(e)))
+        }
+    }
+
+    private fun toFriendlyAuthError(statusCode: Int, rawBody: String?, isRegister: Boolean): String {
+        val raw = rawBody.orEmpty().lowercase()
+
+        return when {
+            raw.contains("user_already_exists") || raw.contains("already registered") ->
+                "อีเมลนี้สมัครไว้แล้ว กรุณาเข้าสู่ระบบแทน"
+
+            raw.contains("invalid_credentials") || raw.contains("invalid login credentials") ->
+                "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
+
+            raw.contains("email not confirmed") || raw.contains("email_not_confirmed") ->
+                "กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ"
+
+            raw.contains("signup_disabled") || raw.contains("signups not allowed") ->
+                "ระบบยังไม่เปิดให้สมัครสมาชิกใหม่"
+
+            raw.contains("password") && raw.contains("weak") ->
+                "รหัสผ่านง่ายเกินไป กรุณาตั้งรหัสผ่านใหม่ให้ปลอดภัยขึ้น"
+
+            raw.contains("email") && raw.contains("invalid") ->
+                "รูปแบบอีเมลไม่ถูกต้อง"
+
+            statusCode == 400 && isRegister ->
+                "สมัครสมาชิกไม่สำเร็จ กรุณาตรวจสอบอีเมลและรหัสผ่าน"
+
+            statusCode == 400 ->
+                "เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบข้อมูลอีกครั้ง"
+
+            statusCode == 401 || statusCode == 403 ->
+                "ไม่มีสิทธิ์เข้าใช้งาน กรุณาเข้าสู่ระบบใหม่"
+
+            statusCode >= 500 ->
+                "เซิร์ฟเวอร์มีปัญหาชั่วคราว กรุณาลองใหม่อีกครั้ง"
+
+            else ->
+                if (isRegister) "สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" else "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+        }
+    }
+
+    private fun toFriendlyNetworkError(error: Exception): String {
+        val message = error.message.orEmpty().lowercase()
+        return when {
+            message.contains("unable to resolve host") || message.contains("failed to connect") ->
+                "เชื่อมต่ออินเทอร์เน็ตหรือ Supabase ไม่ได้ กรุณาตรวจสอบการเชื่อมต่อ"
+
+            message.contains("timeout") ->
+                "การเชื่อมต่อนานเกินไป กรุณาลองใหม่อีกครั้ง"
+
+            else ->
+                "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง"
         }
     }
 }
