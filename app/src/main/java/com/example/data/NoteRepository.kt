@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 
 class NoteRepository(private val noteDao: NoteDao) {
     val allNotesFlow: Flow<List<Note>> = noteDao.getAllNotesFlow()
+    val deletedNotesFlow: Flow<List<Note>> = noteDao.getDeletedNotesFlow()
 
     suspend fun getNoteById(id: Int): Note? {
         return noteDao.getNoteById(id)
@@ -33,6 +34,14 @@ class NoteRepository(private val noteDao: NoteDao) {
         noteDao.softDeleteNote(
             localId = localId,
             deletedAt = deletedAt,
+            updatedAt = updatedAt,
+            syncStatus = syncStatus
+        )
+    }
+
+    suspend fun restoreNote(localId: Int, updatedAt: Long, syncStatus: String) {
+        noteDao.restoreNote(
+            localId = localId,
             updatedAt = updatedAt,
             syncStatus = syncStatus
         )
