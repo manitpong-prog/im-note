@@ -1,21 +1,56 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# iM Note
 
-# Run and deploy your AI Studio app
+แอพจดบันทึก Android แบบ local-first เขียนด้วย Kotlin + Jetpack Compose + Room Database
 
-This contains everything you need to run your app locally.
+## สถานะปัจจุบัน
 
-View your app in AI Studio: https://ai.studio/apps/2bf2beb3-478d-4bf2-8a07-b69cb00c1579
+โปรเจกต์นี้เป็นแอพจดโน้ตที่ใช้งานในเครื่องได้แล้ว โดยข้อมูลโน้ตถูกเก็บไว้ใน SQLite ผ่าน Room Database บนอุปกรณ์ของผู้ใช้
+
+ฟีเจอร์ที่มีแล้ว:
+
+- เพิ่ม แก้ไข และลบโน้ต
+- บันทึกชื่อเรื่องและเนื้อหา
+- เลือกสีโน้ต
+- ปักหมุดโน้ตสำคัญ
+- ค้นหาโน้ตจากชื่อเรื่องหรือเนื้อหา
+- เรียงลำดับตามเวลาที่แก้ไขหรือชื่อเรื่อง
+- สลับมุมมอง List / Grid
+- Dark Mode
+- ตั้งค่าให้โน้ตใหม่ถูกปักหมุดเป็นค่าเริ่มต้น
+- หน้าบัญชีและการเข้าสู่ระบบแบบทดลองสำหรับทดสอบ UI
+
+> หมายเหตุ: ระบบบัญชี, Google Login และ Cloud Sync ในเวอร์ชันนี้ยังเป็นโหมดจำลองสำหรับทดสอบหน้าจอเท่านั้น ยังไม่ได้เชื่อมต่อ backend จริง
+
+## Tech Stack
+
+- Kotlin
+- Android Jetpack Compose
+- Material 3
+- Navigation Compose
+- Room Database
+- SharedPreferences
+- Gradle Kotlin DSL
 
 ## Run Locally
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+**Prerequisites:** Android Studio
 
+1. Clone repository นี้ลงเครื่อง
+2. เปิดโฟลเดอร์โปรเจกต์ด้วย Android Studio
+3. รอให้ Gradle Sync เสร็จ
+4. เลือก emulator หรือ Android device
+5. กด Run
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
+แอพทำงานแบบ offline-first จึงยังไม่จำเป็นต้องใส่ API key เพื่อเริ่มใช้งาน
+
+## Roadmap
+
+สิ่งที่ควรพัฒนาต่อ:
+
+1. เปลี่ยนระบบบัญชีจำลองเป็น Firebase Auth หรือ Supabase Auth
+2. เพิ่ม Cloud Sync จริง
+3. เพิ่มหมวดหมู่หรือแท็กของโน้ต
+4. เพิ่มระบบ Archive / Trash
+5. เพิ่ม Export / Import สำรองข้อมูล
+6. เพิ่ม widget หรือ quick note จากหน้า home
+7. เพิ่ม automated tests สำหรับ ViewModel และ Room DAO
