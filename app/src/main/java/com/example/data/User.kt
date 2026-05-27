@@ -1,6 +1,7 @@
 package com.imnotesminimal.app.data
 
 data class User(
+    val id: String? = null,
     val email: String,
     val displayName: String,
     val imageUrl: String? = null,
