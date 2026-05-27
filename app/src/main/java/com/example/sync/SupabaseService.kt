@@ -27,7 +27,11 @@ object SupabaseService {
             Retrofit.Builder()
                 .baseUrl("${SupabaseConfig.url}/")
                 .client(okHttpClient)
-                .addConverterFactory(MoshiConverterFactory.create(moshi))
+                .addConverterFactory(
+                    MoshiConverterFactory
+                        .create(moshi)
+                        .withNullSerialization()
+                )
                 .build()
         }
     }
