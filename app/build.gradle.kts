@@ -1,8 +1,24 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
+}
+
+val localProperties = Properties().apply {
+  val file = rootProject.file("local.properties")
+  if (file.exists()) {
+    file.inputStream().use { load(it) }
+  }
+}
+
+fun configString(name: String): String {
+  val value = (System.getenv(name) ?: localProperties.getProperty(name) ?: "")
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
+  return "\"$value\""
 }
 
 android {
@@ -17,6 +33,9 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    buildConfigField("String", "SUPABASE_URL", configString("SUPABASE_URL"))
+    buildConfigField("String", "SUPABASE_ANON_KEY", configString("SUPABASE_ANON_KEY"))
   }
 
   signingConfigs {
