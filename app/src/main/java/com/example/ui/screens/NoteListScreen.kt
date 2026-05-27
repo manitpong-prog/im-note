@@ -59,7 +59,7 @@ fun NoteListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "iM Note",
+                        text = "iM Notes Minimal",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
