@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sync.SupabaseAuthRepository
 import com.imnotesminimal.app.data.AppDatabase
 import com.imnotesminimal.app.data.Note
 import com.imnotesminimal.app.data.NoteRepository
@@ -29,9 +30,9 @@ enum class SortMode(val displayNameTh: String) {
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: NoteRepository
+    private val authRepository = SupabaseAuthRepository()
     private val sharedPrefs: SharedPreferences = application.getSharedPreferences("im_notes_prefs", Context.MODE_PRIVATE)
 
-    // Local account flows. This is not real cloud authentication yet.
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
@@ -41,7 +42,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _lastSyncTime = MutableStateFlow(0L)
     val lastSyncTime: StateFlow<Long> = _lastSyncTime.asStateFlow()
 
-    // Settings flows
     private val _autoSync = MutableStateFlow(true)
     val autoSync: StateFlow<Boolean> = _autoSync.asStateFlow()
 
@@ -54,7 +54,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _pinNewDefault = MutableStateFlow(false)
     val pinNewDefault: StateFlow<Boolean> = _pinNewDefault.asStateFlow()
 
-    // In-memory UI control states
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
@@ -64,7 +63,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _isGridView = MutableStateFlow(false)
     val isGridView: StateFlow<Boolean> = _isGridView.asStateFlow()
 
-    private val _selectedColorFilter = MutableStateFlow<Int?>(null) // null = all colors
+    private val _selectedColorFilter = MutableStateFlow<Int?>(null)
     val selectedColorFilter: StateFlow<Int?> = _selectedColorFilter.asStateFlow()
 
     init {
@@ -81,12 +80,14 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         _pinNewDefault.value = sharedPrefs.getBoolean("pin_default", false)
         _lastSyncTime.value = sharedPrefs.getLong("last_sync_time", 0L)
 
+        val userId = sharedPrefs.getString("logged_user_id", null)
         val email = sharedPrefs.getString("logged_email", null)
         val name = sharedPrefs.getString("logged_name", null)
         val type = sharedPrefs.getString("logged_type", null)
 
         if (email != null && name != null) {
             _currentUser.value = User(
+                id = userId,
                 email = email,
                 displayName = name,
                 imageUrl = if (type == "GOOGLE") "G" else null,
@@ -233,19 +234,18 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        val existsKey = "user_pwd_$email"
-        if (sharedPrefs.contains(existsKey)) {
-            onResult(false, "อีเมลนี้เคยสมัครไว้แล้ว กรุณาเข้าสู่ระบบ")
-            return
-        }
-
-        sharedPrefs.edit()
-            .putString("user_pwd_$email", password)
-            .putString("user_name_$email", displayName)
-            .apply()
-
-        authenticateUser(email, password) { success, msg ->
-            onResult(success, if (success) "สมัครสมาชิกและเข้าสู่ระบบสำเร็จ" else msg)
+        viewModelScope.launch {
+            val result = authRepository.signUp(email, password, displayName)
+            result.fold(
+                onSuccess = { user ->
+                    saveLoggedInUser(user, accessToken = null, refreshToken = null)
+                    onResult(true, "สมัครสมาชิกสำเร็จ")
+                    triggerSimulatedCloudSync()
+                },
+                onFailure = { error ->
+                    onResult(false, error.message ?: "สมัครสมาชิกไม่สำเร็จ")
+                }
+            )
         }
     }
 
@@ -253,35 +253,28 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         val email = emailInput.trim().lowercase()
         val password = passwordInput.trim()
 
-        val savedPassword = sharedPrefs.getString("user_pwd_$email", null)
-        val savedName = sharedPrefs.getString("user_name_$email", null)
-
-        if (savedPassword == null || savedName == null) {
-            onResult(false, "ไม่พบบัญชีผู้ใช้ ตรวจสอบอีเมลหรือสมัครใหม่")
+        if (email.isBlank() || password.isBlank()) {
+            onResult(false, "กรุณากรอกอีเมลและรหัสผ่าน")
             return
         }
 
-        if (savedPassword != password) {
-            onResult(false, "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง")
-            return
+        viewModelScope.launch {
+            val result = authRepository.signIn(email, password)
+            result.fold(
+                onSuccess = { (user, session) ->
+                    saveLoggedInUser(
+                        user = user,
+                        accessToken = session.accessToken,
+                        refreshToken = session.refreshToken
+                    )
+                    onResult(true, "เข้าสู่ระบบสำเร็จ")
+                    triggerSimulatedCloudSync()
+                },
+                onFailure = { error ->
+                    onResult(false, error.message ?: "เข้าสู่ระบบไม่สำเร็จ")
+                }
+            )
         }
-
-        val loggedUser = User(
-            email = email,
-            displayName = savedName,
-            imageUrl = null,
-            accountType = "EMAIL"
-        )
-
-        sharedPrefs.edit()
-            .putString("logged_email", email)
-            .putString("logged_name", savedName)
-            .putString("logged_type", "EMAIL")
-            .apply()
-
-        _currentUser.value = loggedUser
-        onResult(true, "เข้าสู่ระบบสำเร็จ")
-        triggerSimulatedCloudSync()
     }
 
     fun authenticateWithGoogle(emailInput: String, nameInput: String) {
@@ -295,25 +288,34 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             accountType = "GOOGLE"
         )
 
-        sharedPrefs.edit()
-            .putString("logged_email", email)
-            .putString("logged_name", displayName)
-            .putString("logged_type", "GOOGLE")
-            .apply()
-
-        _currentUser.value = loggedUser
+        saveLoggedInUser(loggedUser, accessToken = null, refreshToken = null)
         triggerSimulatedCloudSync()
+    }
+
+    private fun saveLoggedInUser(user: User, accessToken: String?, refreshToken: String?) {
+        sharedPrefs.edit()
+            .putString("logged_user_id", user.id)
+            .putString("logged_email", user.email)
+            .putString("logged_name", user.displayName)
+            .putString("logged_type", user.accountType)
+            .putString("supabase_access_token", accessToken)
+            .putString("supabase_refresh_token", refreshToken)
+            .apply()
+        _currentUser.value = user
     }
 
     fun signOutUser() {
         sharedPrefs.edit()
+            .remove("logged_user_id")
             .remove("logged_email")
             .remove("logged_name")
             .remove("logged_type")
+            .remove("supabase_access_token")
+            .remove("supabase_refresh_token")
+            .remove("last_sync_time")
             .apply()
         _currentUser.value = null
         _lastSyncTime.value = 0L
-        sharedPrefs.edit().remove("last_sync_time").apply()
     }
 
     fun deleteUserAccount(onComplete: () -> Unit = {}) {
@@ -359,7 +361,9 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                     colorIndex = colorIndex,
                     isPinned = isPinned || _pinNewDefault.value,
                     createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
+                    updatedAt = System.currentTimeMillis(),
+                    userId = _currentUser.value?.id,
+                    syncStatus = if (_currentUser.value != null) "PENDING" else "LOCAL"
                 )
                 repository.insertNote(newNote)
             } else {
@@ -370,7 +374,9 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                         content = content,
                         colorIndex = colorIndex,
                         isPinned = isPinned,
-                        updatedAt = System.currentTimeMillis()
+                        updatedAt = System.currentTimeMillis(),
+                        userId = existingNote.userId ?: _currentUser.value?.id,
+                        syncStatus = if (_currentUser.value != null) "PENDING" else existingNote.syncStatus
                     )
                     repository.updateNote(updatedNote)
                 }
@@ -393,7 +399,11 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun togglePinState(note: Note) {
         viewModelScope.launch {
-            val updated = note.copy(isPinned = !note.isPinned, updatedAt = System.currentTimeMillis())
+            val updated = note.copy(
+                isPinned = !note.isPinned,
+                updatedAt = System.currentTimeMillis(),
+                syncStatus = if (_currentUser.value != null) "PENDING" else note.syncStatus
+            )
             repository.updateNote(updated)
             triggerSimulatedCloudSync()
         }
@@ -401,7 +411,11 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun changeNoteColor(note: Note, newColorIndex: Int) {
         viewModelScope.launch {
-            val updated = note.copy(colorIndex = newColorIndex, updatedAt = System.currentTimeMillis())
+            val updated = note.copy(
+                colorIndex = newColorIndex,
+                updatedAt = System.currentTimeMillis(),
+                syncStatus = if (_currentUser.value != null) "PENDING" else note.syncStatus
+            )
             repository.updateNote(updated)
             triggerSimulatedCloudSync()
         }
