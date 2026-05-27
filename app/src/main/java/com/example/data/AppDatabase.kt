@@ -1,4 +1,4 @@
-package com.example.data
+package com.imnotesminimal.app.data
 
 import android.content.Context
 import androidx.room.Database
