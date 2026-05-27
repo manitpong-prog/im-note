@@ -13,7 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.ui.NoteViewModel
+import com.imnotesminimal.app.ui.NoteViewModel
 import com.example.ui.screens.AboutPrivacyScreen
 import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.NoteEditorScreen
