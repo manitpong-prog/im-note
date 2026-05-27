@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -71,7 +70,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         repository = NoteRepository(database.noteDao)
         syncRepository = NoteSyncRepository(application.applicationContext, repository)
         loadSavedPreferences()
-        seedSampleNotes()
     }
 
     private fun loadSavedPreferences() {
@@ -94,27 +92,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 imageUrl = if (type == "GOOGLE") "G" else null,
                 accountType = type ?: "EMAIL"
             )
-        }
-    }
-
-    private fun seedSampleNotes() {
-        viewModelScope.launch {
-            try {
-                val currentNotes = repository.allNotesFlow.first()
-                if (currentNotes.isEmpty()) {
-                    val currentTime = System.currentTimeMillis()
-                    val sampleNotes = listOf(
-                        Note(title = "ช้อปปิ้งของเข้าบ้าน 🛒", content = "1. นมจืดสองกล่อง\n2. ไข่ไก่ 1 แผง\n3. ผักกาดขาวและแครอท\n4. อกไก่หมักพริกไทยดำ 1 กิโลกรัม", colorIndex = 0, isPinned = true, createdAt = currentTime - 3600000 * 24, updatedAt = currentTime - 3600000 * 12),
-                        Note(title = "วางแผนท่องเที่ยวเชียงใหม่ ✈️", content = "วันแรก: ดอยสุเทพ, นิมมานฯ ชิลคาเฟ่ยอดนิยม\nวันที่สอง: ม่อนแจ่ม ดูทะเลหมอกยามเช้า\nวันที่สาม: ซื้อไส้อั่ว น้ำพริกหนุ่มตลาดวโรรส", colorIndex = 1, isPinned = false, createdAt = currentTime - 3600000 * 48, updatedAt = currentTime - 3600000 * 24),
-                        Note(title = "บันทึกไอเดียแอปพยากรณ์อากาศ ☀️", content = "ดีไซน์หน้าตาแบบเรียบหรู ปล่อยอนิเมชันตามสภาพอากาศจริง\nดึงข้อมูลสภาพอากาศจาก OpenWeatherMap API\nเพิ่มกล่องแจ้งเตือนฝนล่วงหน้าและเสื้อฝนที่แนะนำ", colorIndex = 2, isPinned = false, createdAt = currentTime - 3600000 * 10, updatedAt = currentTime - 3600000 * 2),
-                        Note(title = "ตารางออกกำลังกายประจำสัปดาห์ 🏃‍♂️", content = "จันทร์: คาร์ดิโอสลับเดินเร็ว\nพุธ: เวทเทรนนิ่งแกนกลางลำตัว\nศุกร์: โยคะเพื่อสุขภาพและหลังตึง", colorIndex = 3, isPinned = true, createdAt = currentTime - 3600000 * 2, updatedAt = currentTime),
-                        Note(title = "สูตรทำบราวนี่ช็อกโกแลตหน้าฟิล์ม 🍫", content = "แป้งเค้กอเนกประสงค์ 100g, ผงโกโก้ 60g, เนยละลาย 120g และน้ำตาล 150g\nอบอุณหภูมิ 175 C ประมาณ 20 นาที", colorIndex = 5, isPinned = false, createdAt = currentTime - 3600000 * 72, updatedAt = currentTime - 3600000 * 48)
-                    )
-                    for (note in sampleNotes) repository.insertNote(note)
-                }
-            } catch (e: Exception) {
-                // Keep the app usable even if sample-note seeding fails.
-            }
         }
     }
 
