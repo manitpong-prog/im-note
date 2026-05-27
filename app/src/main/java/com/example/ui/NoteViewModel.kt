@@ -352,7 +352,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 _isSyncing.value = true
-                val result = syncRepository.uploadPendingNotes(
+                val result = syncRepository.syncAll(
                     userId = user.id,
                     accessToken = accessToken
                 )
