@@ -9,6 +9,10 @@ class NoteRepository(private val noteDao: NoteDao) {
         return noteDao.getNoteById(id)
     }
 
+    suspend fun getNoteByRemoteId(remoteId: String): Note? {
+        return noteDao.getNoteByRemoteId(remoteId)
+    }
+
     suspend fun getNotesNeedingSync(): List<Note> {
         return noteDao.getNotesNeedingSync()
     }
