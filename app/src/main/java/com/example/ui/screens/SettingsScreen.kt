@@ -56,7 +56,9 @@ fun SettingsScreen(
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
     val pinNewDefault by viewModel.pinNewDefault.collectAsState()
 
-    var showRemoveUserDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var isDeletingAccount by remember { mutableStateOf(false) }
+    var deleteAccountError by remember { mutableStateOf<String?>(null) }
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -82,11 +84,37 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top
         ) {
+            deleteAccountError?.let { error ->
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = error,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
             SectionTitle("บัญชีและการซิงค์")
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     val user = currentUser
@@ -106,7 +134,9 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(14.dp))
                         Button(
                             onClick = onNavigateToLogin,
-                            modifier = Modifier.fillMaxWidth().testTag("settings_login_prompt_button"),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("settings_login_prompt_button"),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("เข้าสู่ระบบ / สมัครสมาชิก", fontWeight = FontWeight.Bold)
@@ -114,7 +144,10 @@ fun SettingsScreen(
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
-                                modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary),
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (user.imageUrl == "G") {
@@ -171,14 +204,6 @@ fun SettingsScreen(
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "ระบบออกแบบให้ใช้ได้ทั้งออฟไลน์และออนไลน์: โน้ตจะอยู่ในเครื่องเสมอ และบัญชีจะใช้สำหรับสำรอง/ซิงค์อัตโนมัติ",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
                 }
             }
@@ -187,7 +212,9 @@ fun SettingsScreen(
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
             ) {
                 Column {
                     SettingsSwitchRow(
@@ -216,7 +243,9 @@ fun SettingsScreen(
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
             ) {
                 Column {
                     SettingsSwitchRow(
@@ -240,80 +269,65 @@ fun SettingsScreen(
             }
 
             SectionTitle("โน้ตที่ลบแล้ว")
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onNavigateToTrash() }
-                        .padding(16.dp)
-                        .testTag("settings_trash_row")
-                ) {
-                    Icon(Icons.Default.RestoreFromTrash, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("ถังขยะ", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                        Text("ดู กู้คืน หรือลบถาวรโน้ตที่เคยลบไปแล้ว", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
+            SettingsSimpleRow(
+                icon = Icons.Default.RestoreFromTrash,
+                title = "ถังขยะ",
+                subtitle = "ดู กู้คืน หรือลบถาวรโน้ตที่เคยลบไปแล้ว",
+                onClick = onNavigateToTrash,
+                testTag = "settings_trash_row"
+            )
 
             SectionTitle("ข้อมูลแอพ")
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onNavigateToAboutPrivacy() }
-                        .padding(16.dp)
-                        .testTag("settings_about_privacy_row")
-                ) {
-                    Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("เกี่ยวกับและความเป็นส่วนตัว", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                        Text("ข้อมูลแอพ การจัดเก็บโน้ต การซิงค์ และการลบข้อมูล", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
+            SettingsSimpleRow(
+                icon = Icons.Default.Info,
+                title = "เกี่ยวกับและความเป็นส่วนตัว",
+                subtitle = "ข้อมูลแอพ การจัดเก็บโน้ต การซิงค์ และการลบข้อมูล",
+                onClick = onNavigateToAboutPrivacy,
+                testTag = "settings_about_privacy_row"
+            )
 
             if (currentUser != null) {
                 SectionTitle("จัดการผู้ใช้งาน")
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
                 ) {
                     Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().clickable { viewModel.signOutUser() }.padding(16.dp).testTag("settings_logout_row")
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(enabled = !isDeletingAccount) { viewModel.signOutUser() }
+                                .padding(16.dp)
+                                .testTag("settings_logout_row")
                         ) {
                             Icon(Icons.Default.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("ออกจากระบบ", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                Text("โน้ตในเครื่องยังอยู่ และสามารถใช้งานออฟไลน์ต่อได้", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("ล้าง session และล้างโน้ตในเครื่องนี้ทันที", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().clickable { showRemoveUserDialog = true }.padding(16.dp).testTag("settings_remove_user_row")
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(enabled = !isDeletingAccount) { showDeleteAccountDialog = true }
+                                .padding(16.dp)
+                                .testTag("settings_remove_user_row")
                         ) {
                             Icon(Icons.Default.PersonRemove, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("ลบผู้ใช้งาน", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
-                                Text("นำบัญชีนี้ออกจากแอพบนเครื่องนี้ โน้ตในเครื่องยังคงอยู่", fontSize = 11.sp, color = MaterialTheme.colorScheme.error.copy(alpha = 0.75f))
+                                Text("ลบบัญชีถาวร", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
+                                Text("ลบบัญชีออกจาก Supabase Auth พร้อมโน้ตและข้อมูลโปรไฟล์", fontSize = 11.sp, color = MaterialTheme.colorScheme.error.copy(alpha = 0.75f))
+                            }
+                            if (isDeletingAccount) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                             }
                         }
                     }
@@ -326,33 +340,91 @@ fun SettingsScreen(
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
             )
         }
     }
 
-    if (showRemoveUserDialog) {
+    if (showDeleteAccountDialog) {
         AlertDialog(
-            onDismissRequest = { showRemoveUserDialog = false },
+            onDismissRequest = {
+                if (!isDeletingAccount) showDeleteAccountDialog = false
+            },
             icon = { Icon(Icons.Default.PersonRemove, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("ลบผู้ใช้งาน?", fontWeight = FontWeight.Bold) },
-            text = { Text("ต้องการนำผู้ใช้งานนี้ออกจากแอพบนเครื่องนี้ใช่ไหม? โน้ตที่อยู่ในเครื่องจะยังคงอยู่") },
+            title = { Text("ลบบัญชีถาวร?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("การดำเนินการนี้จะลบบัญชีออกจาก Supabase Auth รวมถึงโน้ตและข้อมูลโปรไฟล์ออนไลน์ของบัญชีนี้ และจะล้างข้อมูลในเครื่องนี้ด้วย ไม่สามารถย้อนกลับได้")
+            },
             confirmButton = {
                 Button(
                     onClick = {
-                        showRemoveUserDialog = false
-                        viewModel.signOutUser()
-                        onNavigateBack()
+                        isDeletingAccount = true
+                        deleteAccountError = null
+                        viewModel.deleteUserAccount { success, message ->
+                            isDeletingAccount = false
+                            showDeleteAccountDialog = false
+                            if (success) {
+                                onNavigateBack()
+                            } else {
+                                deleteAccountError = message
+                            }
+                        }
                     },
+                    enabled = !isDeletingAccount,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("ยืนยันลบผู้ใช้งาน")
+                    if (isDeletingAccount) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onError)
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text("ยืนยันลบบัญชีถาวร")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRemoveUserDialog = false }) { Text("ยกเลิก") }
+                TextButton(
+                    enabled = !isDeletingAccount,
+                    onClick = { showDeleteAccountDialog = false }
+                ) {
+                    Text("ยกเลิก")
+                }
             }
         )
+    }
+}
+
+@Composable
+fun SettingsSimpleRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    testTag: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 20.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(16.dp)
+                .testTag(testTag)
+        ) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     }
 }
 
@@ -378,13 +450,18 @@ fun SettingsSwitchRow(
     tag: String = ""
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier.size(36.dp).clip(CircleShape).background(
-                if (checked && enabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant
-            ),
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(
+                    if (checked && enabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
