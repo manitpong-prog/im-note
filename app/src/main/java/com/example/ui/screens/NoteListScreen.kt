@@ -1,11 +1,26 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -14,15 +29,56 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.NoteAlt
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,7 +88,8 @@ import com.example.ui.SearchMode
 import com.example.ui.SortMode
 import com.example.ui.theme.NoteColors
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,25 +105,19 @@ fun NoteListScreen(
     val currentSortMode by viewModel.sortMode.collectAsState()
     val isGridView by viewModel.isGridView.collectAsState()
     val activeColorFilter by viewModel.selectedColorFilter.collectAsState()
-
     val currentUser by viewModel.currentUser.collectAsState()
     val isSyncing by viewModel.isSyncing.collectAsState()
 
     var dismissPromoBanner by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf<Note?>(null) }
-
     val hasSearchOrFilter = searchQuery.isNotBlank() || activeColorFilter != null
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "iM Notes Minimal",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    AppHeaderTitle()
                 },
                 actions = {
                     IconButton(
@@ -83,10 +134,7 @@ fun NoteListScreen(
                         onClick = { showSortMenu = true },
                         modifier = Modifier.testTag("sort_menu_button")
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Sort,
-                            contentDescription = "เรียงลำดับบันทึก"
-                        )
+                        Icon(Icons.Default.Sort, contentDescription = "เรียงลำดับบันทึก")
                         DropdownMenu(
                             expanded = showSortMenu,
                             onDismissRequest = { showSortMenu = false }
@@ -308,42 +356,7 @@ fun NoteListScreen(
                 onColorSelected = { viewModel.setColorFilter(it) }
             )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FilterList,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "จัดเรียง: ${currentSortMode.displayNameTh}",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                if (activeColorFilter != null) {
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(CircleShape)
-                            .background(NoteColors.getProfile(activeColorFilter!!).tagColor)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "สี: ${NoteColors.getProfile(activeColorFilter!!).name}",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            SortStatusRow(currentSortMode = currentSortMode, activeColorFilter = activeColorFilter)
 
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -356,26 +369,24 @@ fun NoteListScreen(
                         viewModel.setSearchMode(SearchMode.ALL)
                     }
                 )
+            } else if (isGridView) {
+                NotesGrid(
+                    notes = notes,
+                    onNoteClick = onNoteClick,
+                    onNotePinToggle = { viewModel.togglePinState(it) },
+                    onNoteDelete = { showDeleteConfirmDialog = it },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp)
+                )
             } else {
-                if (isGridView) {
-                    NotesGrid(
-                        notes = notes,
-                        onNoteClick = onNoteClick,
-                        onNotePinToggle = { viewModel.togglePinState(it) },
-                        onNoteDelete = { showDeleteConfirmDialog = it },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 8.dp)
-                    )
-                } else {
-                    NotesList(
-                        notes = notes,
-                        onNoteClick = onNoteClick,
-                        onNotePinToggle = { viewModel.togglePinState(it) },
-                        onNoteDelete = { showDeleteConfirmDialog = it },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                NotesList(
+                    notes = notes,
+                    onNoteClick = onNoteClick,
+                    onNotePinToggle = { viewModel.togglePinState(it) },
+                    onNoteDelete = { showDeleteConfirmDialog = it },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }
@@ -401,6 +412,38 @@ fun NoteListScreen(
                     Text("ยกเลิก")
                 }
             }
+        )
+    }
+}
+
+@Composable
+fun AppHeaderTitle(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(11.dp))
+                .background(Color(0xFFFFFBF3)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "M✎",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFFFFB18B),
+                maxLines = 1
+            )
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = "iM Notes Minimal",
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -501,6 +544,46 @@ fun ColorFilterRow(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SortStatusRow(currentSortMode: SortMode, activeColorFilter: Int?) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.FilterList,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = "จัดเรียง: ${currentSortMode.displayNameTh}",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        if (activeColorFilter != null) {
+            Spacer(modifier = Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(NoteColors.getProfile(activeColorFilter).tagColor)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "สี: ${NoteColors.getProfile(activeColorFilter).name}",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -694,7 +777,7 @@ fun EmptyNotesState(
                 text = if (hasFilter) "ลองปรับคำค้นหา ตัวเลือกค้นหา หรือตัวกรองสีใหม่อีกครั้ง" else "เริ่มจดไอเดีย งาน หรือรายการที่ต้องทำได้เลย",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
             if (hasFilter) {
                 Spacer(modifier = Modifier.height(16.dp))
