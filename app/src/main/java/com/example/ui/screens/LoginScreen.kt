@@ -1,9 +1,25 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.*
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,12 +30,33 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,8 +75,11 @@ fun LoginScreen(
     onNavigateBack: () -> Unit,
     onNavigateToRegister: () -> Unit,
     onLoginSuccess: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    oauthMessage: String? = null,
+    onOAuthMessageConsumed: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -48,13 +88,20 @@ fun LoginScreen(
     var successMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
-    var showGoogleAccountSelector by remember { mutableStateOf(false) }
-
-    val presetGoogleAccounts = listOf(
-        Pair("ddlcool@gmail.com", "DDL Cool User"),
-        Pair("minimalist.note@gmail.com", "Minimalist Fan"),
-        Pair("android.demo@gmail.com", "Android Developer")
-    )
+    LaunchedEffect(oauthMessage) {
+        val message = oauthMessage
+        if (!message.isNullOrBlank()) {
+            if (message.contains("สำเร็จ")) {
+                successMessage = message
+                errorMessage = null
+                onLoginSuccess()
+            } else {
+                errorMessage = message
+                successMessage = null
+            }
+            onOAuthMessageConsumed()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -89,7 +136,6 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Brand Header Visual Elements
             Box(
                 modifier = Modifier
                     .size(72.dp)
@@ -115,7 +161,7 @@ fun LoginScreen(
             )
 
             Text(
-                text = "เข้าใช้งานเพื่อเปิดการสำรองโน้ต แฟ้มข้อมูล และซิงค์อุปกรณ์อัตโนมัติ",
+                text = "เข้าใช้งานเพื่อเปิดการสำรองโน้ต และซิงค์อุปกรณ์อัตโนมัติ",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center,
@@ -124,7 +170,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Error Display Toast alert
             AnimatedVisibility(
                 visible = errorMessage != null,
                 enter = fadeIn() + expandVertically(),
@@ -159,7 +204,6 @@ fun LoginScreen(
                 }
             }
 
-            // Success Display alert
             AnimatedVisibility(
                 visible = successMessage != null,
                 enter = fadeIn() + expandVertically(),
@@ -194,7 +238,6 @@ fun LoginScreen(
                 }
             }
 
-            // Form Inputs
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it; errorMessage = null },
@@ -234,7 +277,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Main login trigger
             Button(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
@@ -290,14 +332,13 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Or layout divider
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 HorizontalDivider(modifier = Modifier.weight(1f))
                 Text(
-                    text = "หรือ เชื่อมโยงด่วนด้วยระบบอื่น",
+                    text = "หรือ",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
@@ -308,21 +349,27 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Google sign in simulation button
             OutlinedButton(
-                onClick = { showGoogleAccountSelector = true },
+                onClick = {
+                    val oauthUrl = viewModel.getGoogleOAuthUrl()
+                    if (oauthUrl.isBlank()) {
+                        errorMessage = "ยังไม่ได้ตั้งค่า Supabase URL และ Anon Key"
+                        return@OutlinedButton
+                    }
+                    val customTabsIntent = CustomTabsIntent.Builder().build()
+                    customTabsIntent.launchUrl(context, Uri.parse(oauthUrl))
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
                     .testTag("google_login_button"),
                 shape = RoundedCornerShape(25.dp),
-                border = ButtonDefaults.outlinedButtonBorder.copy()
+                border = ButtonDefaults.outlinedButtonBorder
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // Styled Google Logo monogram icon
                     Box(
                         modifier = Modifier
                             .size(24.dp)
@@ -341,94 +388,5 @@ fun LoginScreen(
                 }
             }
         }
-    }
-
-    // Google Account Chooser bottom sheet dialog
-    if (showGoogleAccountSelector) {
-        AlertDialog(
-            onDismissRequest = { showGoogleAccountSelector = false },
-            title = {
-                Text(
-                    text = "เลือกบัญชี Google เพื่อดำเนินการต่อ",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    presetGoogleAccounts.forEach { (emailStr, nameStr) ->
-                        Card(
-                            onClick = {
-                                viewModel.authenticateWithGoogle(emailStr, nameStr)
-                                showGoogleAccountSelector = false
-                                onLoginSuccess()
-                            },
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("google_account_$emailStr")
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(12.dp)
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        nameStr.substring(0, 1),
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(nameStr, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                    Text(emailStr, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Option to add a custom email address
-                    OutlinedButton(
-                        onClick = {
-                            viewModel.authenticateWithGoogle("ddlcool@gmail.com", "ddlcool")
-                            showGoogleAccountSelector = false
-                            onLoginSuccess()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("ใช้ที่อยู่อีเมลอื่นๆ")
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(
-                    onClick = { showGoogleAccountSelector = false },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("ยกเลิก", fontWeight = FontWeight.SemiBold)
-                }
-            }
-        )
     }
 }
