@@ -36,6 +36,7 @@ android {
 
     buildConfigField("String", "SUPABASE_URL", configString("SUPABASE_URL"))
     buildConfigField("String", "SUPABASE_ANON_KEY", configString("SUPABASE_ANON_KEY"))
+    buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", configString("GOOGLE_WEB_CLIENT_ID"))
   }
 
   signingConfigs {
@@ -76,6 +77,13 @@ android {
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
+  implementation(platform(libs.supabase.bom))
+  implementation(libs.supabase.auth)
+  implementation(libs.supabase.postgrest)
+  implementation(libs.ktor.client.android)
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services.auth)
+  implementation(libs.googleid)
   // implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.browser)

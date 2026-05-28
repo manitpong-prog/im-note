@@ -5,6 +5,7 @@ import com.imnotesminimal.app.BuildConfig
 object SupabaseConfig {
     val url: String = BuildConfig.SUPABASE_URL.trim().trimEnd('/')
     val anonKey: String = BuildConfig.SUPABASE_ANON_KEY.trim()
+    val googleWebClientId: String = BuildConfig.GOOGLE_WEB_CLIENT_ID.trim()
 
     val isConfigured: Boolean
         get() = url.startsWith("https://") && anonKey.isNotBlank()

@@ -6,17 +6,23 @@ import android.content.SharedPreferences
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sync.GoogleAuthClient
 import com.example.sync.NoteSyncRepository
+import com.example.sync.Supabase
 import com.example.sync.SupabaseAuthRepository
 import com.imnotesminimal.app.data.AppDatabase
 import com.imnotesminimal.app.data.Note
 import com.imnotesminimal.app.data.NoteRepository
 import com.imnotesminimal.app.data.User
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -37,6 +43,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: NoteRepository
     private val syncRepository: NoteSyncRepository
     private val authRepository = SupabaseAuthRepository()
+    private val googleAuthClient = GoogleAuthClient(application.applicationContext)
     private val sharedPrefs: SharedPreferences = application.getSharedPreferences("im_notes_prefs", Context.MODE_PRIVATE)
 
     private val _currentUser = MutableStateFlow<User?>(null)
@@ -80,6 +87,40 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         repository = NoteRepository(database.noteDao)
         syncRepository = NoteSyncRepository(application.applicationContext, repository)
         loadSavedPreferences()
+        observeSupabaseSession()
+    }
+
+    private fun observeSupabaseSession() {
+        Supabase.client.auth.sessionStatus
+            .onEach { status ->
+                when (status) {
+                    is SessionStatus.Authenticated -> {
+                        val session = status.session
+                        val authUser = session.user
+                        if (authUser != null) {
+                            val email = authUser.email ?: ""
+                            val displayName = authUser.userMetadata?.get("full_name")?.toString()
+                                ?: authUser.userMetadata?.get("name")?.toString()
+                                ?: email.substringBefore("@")
+                            
+                            val user = User(
+                                id = authUser.id,
+                                email = email,
+                                displayName = displayName,
+                                imageUrl = "G",
+                                accountType = "GOOGLE"
+                            )
+                            saveLoggedInUser(user, session.accessToken, session.refreshToken)
+                            triggerCloudSync()
+                        }
+                    }
+                    is SessionStatus.NotAuthenticated -> {
+                        // Optional: handle logout if needed
+                    }
+                    else -> {}
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun loadSavedPreferences() {
@@ -155,6 +196,19 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getGoogleOAuthUrl(): String {
         return authRepository.buildGoogleOAuthUrl()
+    }
+
+    fun signInWithGoogle(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            googleAuthClient.signIn().fold(
+                onSuccess = {
+                    onResult(true, "เข้าสู่ระบบด้วย Google สำเร็จ")
+                },
+                onFailure = { error ->
+                    onResult(false, "Google Login Error: ${error.message}")
+                }
+            )
+        }
     }
 
     fun handleGoogleOAuthCallback(callbackUri: Uri, onResult: (Boolean, String) -> Unit = { _, _ -> }) {
