@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(pendingOAuthUri) {
                 val uri = pendingOAuthUri
                 if (uri != null && uri.scheme == "com.imnotesminimal.app" && uri.host == "login-callback") {
-                    viewModel.handleGoogleOAuthCallback(uri) { success, message ->
+                    viewModel.handleGoogleOAuthCallback(uri) { _, message ->
                         oauthMessage = message
                     }
                     pendingOAuthUri = null
@@ -127,6 +127,8 @@ class MainActivity : ComponentActivity() {
                         composable("register") {
                             RegisterScreen(
                                 viewModel = viewModel,
+                                oauthMessage = oauthMessage,
+                                onOAuthMessageConsumed = { oauthMessage = null },
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 },
