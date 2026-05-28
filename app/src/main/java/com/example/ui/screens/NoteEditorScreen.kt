@@ -13,13 +13,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -55,6 +54,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -237,7 +237,6 @@ fun NoteEditorScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .imePadding()
-                    .navigationBarsPadding()
                     .background(animatedBackground)
             ) {
                 if (isEditing) {
@@ -282,7 +281,7 @@ fun NoteEditorScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .padding(horizontal = 18.dp, vertical = 14.dp)
+                        .padding(horizontal = 18.dp, vertical = 10.dp)
                 ) {
                     if (isEditing) {
                         TextField(
@@ -341,8 +340,7 @@ fun NoteEditorScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
-                                .imePadding()
-                                .padding(bottom = 12.dp)
+                                .padding(bottom = 2.dp)
                                 .testTag("note_content_input")
                         )
                     } else {
@@ -362,7 +360,13 @@ fun NoteEditorScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = colorProfile.textOnSurface,
                                 lineHeight = 30.sp,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onDoubleTap = { isEditing = true }
+                                        )
+                                    }
                             )
 
                             Spacer(modifier = Modifier.height(18.dp))
@@ -372,13 +376,20 @@ fun NoteEditorScreen(
                                     text = "บันทึกนี้ยังไม่มีเนื้อหา",
                                     fontSize = 16.sp,
                                     color = colorProfile.textSecondaryOnSurface.copy(alpha = 0.7f),
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .pointerInput(Unit) {
+                                            detectTapGestures(
+                                                onDoubleTap = { isEditing = true }
+                                            )
+                                        }
                                 )
                             } else {
                                 LinkifiedText(
                                     text = content,
                                     textColor = colorProfile.textOnSurface,
                                     linkColor = MaterialTheme.colorScheme.primary,
+                                    onDoubleTap = { isEditing = true },
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -419,9 +430,11 @@ private fun LinkifiedText(
     text: String,
     textColor: Color,
     linkColor: Color,
+    onDoubleTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uriHandler = LocalUriHandler.current
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     val annotatedText = remember(text, textColor, linkColor) {
         buildLinkAnnotatedString(
             text = text,
@@ -430,21 +443,27 @@ private fun LinkifiedText(
         )
     }
 
-    ClickableText(
+    BasicText(
         text = annotatedText,
         style = TextStyle(
             fontSize = 16.sp,
             color = textColor,
             lineHeight = 24.sp
         ),
-        modifier = modifier,
-        onClick = { offset ->
-            annotatedText
-                .getStringAnnotations(tag = "URL", start = offset, end = offset)
-                .firstOrNull()
-                ?.let { annotation ->
-                    runCatching { uriHandler.openUri(annotation.item) }
+        onTextLayout = { textLayoutResult = it },
+        modifier = modifier.pointerInput(annotatedText) {
+            detectTapGestures(
+                onDoubleTap = { onDoubleTap() },
+                onTap = { tapOffset ->
+                    val characterOffset = textLayoutResult?.getOffsetForPosition(tapOffset) ?: return@detectTapGestures
+                    annotatedText
+                        .getStringAnnotations(tag = "URL", start = characterOffset, end = characterOffset)
+                        .firstOrNull()
+                        ?.let { annotation ->
+                            runCatching { uriHandler.openUri(annotation.item) }
+                        }
                 }
+            )
         }
     )
 }
