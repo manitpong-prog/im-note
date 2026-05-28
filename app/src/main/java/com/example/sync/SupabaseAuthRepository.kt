@@ -17,6 +17,37 @@ class SupabaseAuthRepository {
             .toString()
     }
 
+    suspend fun deleteAccount(accessToken: String?): Result<Unit> {
+        if (accessToken.isNullOrBlank()) {
+            return Result.failure(IllegalStateException("ยังไม่พบ session สำหรับลบบัญชี กรุณาเข้าสู่ระบบใหม่"))
+        }
+
+        if (!SupabaseConfig.isConfigured) {
+            return Result.failure(IllegalStateException("ยังไม่ได้ตั้งค่า Supabase URL และ Anon Key ใน local.properties"))
+        }
+
+        val api = SupabaseService.authApi
+            ?: return Result.failure(IllegalStateException("ไม่สามารถสร้าง Supabase Auth API ได้"))
+
+        return try {
+            val response = api.deleteAccount(
+                apiKey = SupabaseConfig.anonKey,
+                authorization = SupabaseService.bearer(accessToken)
+            )
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(Unit)
+            } else {
+                val message = response.body()?.error
+                    ?: response.errorBody()?.string()
+                    ?: "ลบบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+                Result.failure(IllegalStateException(toFriendlyDeleteAccountError(response.code(), message)))
+            }
+        } catch (e: Exception) {
+            Result.failure(IllegalStateException(toFriendlyNetworkError(e)))
+        }
+    }
+
     suspend fun createGoogleSessionFromCallback(callbackUri: Uri): Result<Pair<User, SupabaseAuthSession>> {
         val fragmentUri = Uri.parse("scheme://host?${callbackUri.fragment.orEmpty()}")
         val accessToken = callbackUri.getQueryParameter("access_token")
@@ -157,6 +188,25 @@ class SupabaseAuthRepository {
             }
         } catch (e: Exception) {
             Result.failure(IllegalStateException(toFriendlyNetworkError(e)))
+        }
+    }
+
+    private fun toFriendlyDeleteAccountError(statusCode: Int, rawBody: String?): String {
+        val raw = rawBody.orEmpty().lowercase()
+        return when {
+            raw.contains("invalid user session") || statusCode == 401 || statusCode == 403 ->
+                "session หมดอายุหรือไม่มีสิทธิ์ลบบัญชี กรุณาเข้าสู่ระบบใหม่"
+
+            raw.contains("missing supabase_service_role_key") || raw.contains("missing supabase_secret_keys") || raw.contains("missing") ->
+                "ยังไม่ได้ตั้งค่า secret key สำหรับ Edge Function delete-account"
+
+            statusCode == 404 ->
+                "ยังไม่ได้ deploy Edge Function delete-account ใน Supabase"
+
+            statusCode >= 500 ->
+                "ระบบลบบัญชีมีปัญหาชั่วคราว กรุณาลองใหม่อีกครั้ง"
+
+            else -> "ลบบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
         }
     }
 
