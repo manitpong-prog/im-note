@@ -102,7 +102,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                             val displayName = authUser.userMetadata?.get("full_name")?.toString()
                                 ?: authUser.userMetadata?.get("name")?.toString()
                                 ?: email.substringBefore("@")
-                            
+
                             val user = User(
                                 id = authUser.id,
                                 email = email,
@@ -111,11 +111,11 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                                 accountType = "GOOGLE"
                             )
                             saveLoggedInUser(user, session.accessToken, session.refreshToken)
-                            triggerCloudSync()
+                            triggerLoginSyncAndReplaceLocalCache()
                         }
                     }
                     is SessionStatus.NotAuthenticated -> {
-                        // Optional: handle logout if needed
+                        // Local notes are cleared explicitly by signOutUser().
                     }
                     else -> {}
                 }
@@ -217,7 +217,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 onSuccess = { (user, session) ->
                     saveLoggedInUser(user, session.accessToken, session.refreshToken)
                     onResult(true, "เข้าสู่ระบบด้วย Google สำเร็จ")
-                    triggerCloudSync()
+                    triggerLoginSyncAndReplaceLocalCache()
                 },
                 onFailure = { error ->
                     onResult(false, error.message ?: "เข้าสู่ระบบด้วย Google ไม่สำเร็จ")
@@ -239,7 +239,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 onSuccess = { (user, session) ->
                     saveLoggedInUser(user, session?.accessToken, session?.refreshToken)
                     onResult(true, "สมัครสมาชิกสำเร็จ")
-                    triggerCloudSync()
+                    triggerLoginSyncAndReplaceLocalCache()
                 },
                 onFailure = { error -> onResult(false, error.message ?: "สมัครสมาชิกไม่สำเร็จ") }
             )
@@ -258,7 +258,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 onSuccess = { (user, session) ->
                     saveLoggedInUser(user, session.accessToken, session.refreshToken)
                     onResult(true, "เข้าสู่ระบบสำเร็จ")
-                    triggerCloudSync()
+                    triggerLoginSyncAndReplaceLocalCache()
                 },
                 onFailure = { error -> onResult(false, error.message ?: "เข้าสู่ระบบไม่สำเร็จ") }
             )
@@ -278,17 +278,21 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signOutUser() {
-        sharedPrefs.edit()
-            .remove("logged_user_id")
-            .remove("logged_email")
-            .remove("logged_name")
-            .remove("logged_type")
-            .remove("supabase_access_token")
-            .remove("supabase_refresh_token")
-            .remove("last_sync_time")
-            .apply()
-        _currentUser.value = null
-        _lastSyncTime.value = 0L
+        viewModelScope.launch {
+            runCatching { Supabase.client.auth.signOut() }
+            sharedPrefs.edit()
+                .remove("logged_user_id")
+                .remove("logged_email")
+                .remove("logged_name")
+                .remove("logged_type")
+                .remove("supabase_access_token")
+                .remove("supabase_refresh_token")
+                .remove("last_sync_time")
+                .apply()
+            repository.deleteAllNotes()
+            _currentUser.value = null
+            _lastSyncTime.value = 0L
+        }
     }
 
     fun deleteUserAccount(onComplete: () -> Unit = {}) {
@@ -306,6 +310,25 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun triggerSimulatedCloudSync() { triggerCloudSync() }
+
+    private fun triggerLoginSyncAndReplaceLocalCache() {
+        val user = _currentUser.value
+        val accessToken = sharedPrefs.getString("supabase_access_token", null)
+        if (user == null) return
+        viewModelScope.launch {
+            try {
+                _isSyncing.value = true
+                val result = syncRepository.syncLoginAndReplaceLocalCache(user.id, accessToken)
+                if (result.isSuccess) {
+                    val currentTime = System.currentTimeMillis()
+                    _lastSyncTime.value = currentTime
+                    sharedPrefs.edit().putLong("last_sync_time", currentTime).apply()
+                }
+            } finally {
+                _isSyncing.value = false
+            }
+        }
+    }
 
     private fun triggerCloudSync() {
         val user = _currentUser.value
