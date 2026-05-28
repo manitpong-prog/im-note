@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -24,6 +26,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,8 +45,11 @@ fun RegisterScreen(
     viewModel: NoteViewModel,
     onNavigateBack: () -> Unit,
     onRegisterSuccess: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    oauthMessage: String? = null,
+    onOAuthMessageConsumed: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -53,6 +60,19 @@ fun RegisterScreen(
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(oauthMessage) {
+        val message = oauthMessage
+        if (!message.isNullOrBlank()) {
+            if (message.contains("สำเร็จ")) {
+                errorMessage = null
+                onRegisterSuccess()
+            } else {
+                errorMessage = message
+            }
+            onOAuthMessageConsumed()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -87,9 +107,8 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Subtitle
             Text(
-                text = "สร้างบัญชีผู้ใช้งานของคุณ เพื่อเปิดการเข้าถึงฐานตั้งค่าคลาวด์ ซิงค์ และระบบสำรองข้อมูลประสิทธิภาพสูง",
+                text = "สร้างบัญชีผู้ใช้งานของคุณ เพื่อเปิดการซิงค์และระบบสำรองข้อมูลออนไลน์",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center,
@@ -98,7 +117,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Error display alert
             AnimatedVisibility(
                 visible = errorMessage != null,
                 enter = fadeIn() + expandVertically(),
@@ -133,7 +151,6 @@ fun RegisterScreen(
                 }
             }
 
-            // Registration Fields
             OutlinedTextField(
                 value = displayName,
                 onValueChange = { displayName = it; errorMessage = null },
@@ -211,7 +228,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Confirm submission button
             Button(
                 onClick = {
                     if (email.isBlank() || displayName.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
@@ -250,6 +266,65 @@ fun RegisterScreen(
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Text("สมัครใช้งานสมาชิก", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f))
+                Text(
+                    text = "หรือ",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(horizontal = 14.dp)
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedButton(
+                onClick = {
+                    val oauthUrl = viewModel.getGoogleOAuthUrl()
+                    if (oauthUrl.isBlank()) {
+                        errorMessage = "ยังไม่ได้ตั้งค่า Supabase URL และ Anon Key"
+                        return@OutlinedButton
+                    }
+                    val customTabsIntent = CustomTabsIntent.Builder().build()
+                    customTabsIntent.launchUrl(context, Uri.parse(oauthUrl))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .testTag("google_register_button"),
+                shape = RoundedCornerShape(25.dp),
+                border = ButtonDefaults.outlinedButtonBorder,
+                enabled = !isLoading
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFF1F1F1)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("G", color = Color(0xFF4285F4), fontWeight = FontWeight.Black, fontSize = 13.sp)
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        "ดำเนินการต่อด้วย Google",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                    )
                 }
             }
 
