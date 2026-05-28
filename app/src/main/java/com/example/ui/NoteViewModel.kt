@@ -3,6 +3,7 @@ package com.imnotesminimal.app.ui
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sync.NoteSyncRepository
@@ -152,6 +153,25 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     fun setDarkTheme(enabled: Boolean) { _isDarkTheme.value = enabled; sharedPrefs.edit().putBoolean("dark_theme", enabled).apply() }
     fun setPinNewDefault(enabled: Boolean) { _pinNewDefault.value = enabled; sharedPrefs.edit().putBoolean("pin_default", enabled).apply() }
 
+    fun getGoogleOAuthUrl(): String {
+        return authRepository.buildGoogleOAuthUrl()
+    }
+
+    fun handleGoogleOAuthCallback(callbackUri: Uri, onResult: (Boolean, String) -> Unit = { _, _ -> }) {
+        viewModelScope.launch {
+            authRepository.createGoogleSessionFromCallback(callbackUri).fold(
+                onSuccess = { (user, session) ->
+                    saveLoggedInUser(user, session.accessToken, session.refreshToken)
+                    onResult(true, "เข้าสู่ระบบด้วย Google สำเร็จ")
+                    triggerCloudSync()
+                },
+                onFailure = { error ->
+                    onResult(false, error.message ?: "เข้าสู่ระบบด้วย Google ไม่สำเร็จ")
+                }
+            )
+        }
+    }
+
     fun registerWithEmail(emailInput: String, passwordInput: String, nameInput: String, onResult: (Boolean, String) -> Unit) {
         val email = emailInput.trim().lowercase()
         val password = passwordInput.trim()
@@ -189,13 +209,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 onFailure = { error -> onResult(false, error.message ?: "เข้าสู่ระบบไม่สำเร็จ") }
             )
         }
-    }
-
-    fun authenticateWithGoogle(emailInput: String, nameInput: String) {
-        val email = emailInput.trim().lowercase()
-        val displayName = nameInput.trim()
-        saveLoggedInUser(User(email = email, displayName = displayName, imageUrl = "G", accountType = "GOOGLE"), null, null)
-        triggerCloudSync()
     }
 
     private fun saveLoggedInUser(user: User, accessToken: String?, refreshToken: String?) {
