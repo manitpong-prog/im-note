@@ -22,6 +22,12 @@ data class SupabaseAuthSession(
     val user: SupabaseAuthUser? = null
 )
 
+data class DeleteAccountResponse(
+    val success: Boolean? = null,
+    @Json(name = "deleted_user_id") val deletedUserId: String? = null,
+    val error: String? = null
+)
+
 data class SupabaseNoteDto(
     val id: String? = null,
     @Json(name = "user_id") val userId: String,
