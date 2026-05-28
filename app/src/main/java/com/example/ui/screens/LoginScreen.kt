@@ -351,17 +351,13 @@ fun LoginScreen(
 
             OutlinedButton(
                 onClick = {
-                    isLoading = true
-                    viewModel.signInWithGoogle { success, msg ->
-                        isLoading = false
-                        if (success) {
-                            successMessage = "เข้าสู่ระบบด้วย Google สำเร็จ!"
-                            errorMessage = null
-                            onLoginSuccess()
-                        } else {
-                            errorMessage = msg
-                        }
+                    val oauthUrl = viewModel.getGoogleOAuthUrl()
+                    if (oauthUrl.isBlank()) {
+                        errorMessage = "ยังไม่ได้ตั้งค่า Supabase URL และ Anon Key"
+                        return@OutlinedButton
                     }
+                    val customTabsIntent = CustomTabsIntent.Builder().build()
+                    customTabsIntent.launchUrl(context, Uri.parse(oauthUrl))
                 },
                 modifier = Modifier
                     .fillMaxWidth()
