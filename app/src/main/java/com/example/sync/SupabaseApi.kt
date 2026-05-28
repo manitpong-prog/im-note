@@ -66,7 +66,7 @@ interface SupabaseNotesApi {
     suspend fun upsertNote(
         @Header("apikey") apiKey: String,
         @Header("Authorization") authorization: String,
-        note: Map<String, @JvmSuppressWildcards Any?>
+        @Body note: Map<String, @JvmSuppressWildcards Any?>
     ): Response<List<SupabaseNoteDto>>
 
     @GET("rest/v1/notes")
