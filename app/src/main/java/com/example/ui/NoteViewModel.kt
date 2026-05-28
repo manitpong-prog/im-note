@@ -279,33 +279,38 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun signOutUser() {
         viewModelScope.launch {
-            runCatching { Supabase.client.auth.signOut() }
-            sharedPrefs.edit()
-                .remove("logged_user_id")
-                .remove("logged_email")
-                .remove("logged_name")
-                .remove("logged_type")
-                .remove("supabase_access_token")
-                .remove("supabase_refresh_token")
-                .remove("last_sync_time")
-                .apply()
-            repository.deleteAllNotes()
-            _currentUser.value = null
-            _lastSyncTime.value = 0L
+            clearLocalSessionAndNotes()
         }
     }
 
-    fun deleteUserAccount(onComplete: () -> Unit = {}) {
+    private suspend fun clearLocalSessionAndNotes() {
+        runCatching { Supabase.client.auth.signOut() }
+        sharedPrefs.edit()
+            .remove("logged_user_id")
+            .remove("logged_email")
+            .remove("logged_name")
+            .remove("logged_type")
+            .remove("supabase_access_token")
+            .remove("supabase_refresh_token")
+            .remove("last_sync_time")
+            .apply()
+        repository.deleteAllNotes()
+        _currentUser.value = null
+        _lastSyncTime.value = 0L
+    }
+
+    fun deleteUserAccount(onResult: (Boolean, String) -> Unit = { _, _ -> }) {
         viewModelScope.launch {
-            try {
-                repository.deleteAllNotes()
-                signOutUser()
-                sharedPrefs.edit().clear().apply()
-                loadSavedPreferences()
-                onComplete()
-            } catch (e: Exception) {
-                // Keep the UI stable if deletion fails.
-            }
+            val accessToken = sharedPrefs.getString("supabase_access_token", null)
+            authRepository.deleteAccount(accessToken).fold(
+                onSuccess = {
+                    clearLocalSessionAndNotes()
+                    onResult(true, "ลบบัญชีถาวรสำเร็จ")
+                },
+                onFailure = { error ->
+                    onResult(false, error.message ?: "ลบบัญชีไม่สำเร็จ")
+                }
+            )
         }
     }
 
