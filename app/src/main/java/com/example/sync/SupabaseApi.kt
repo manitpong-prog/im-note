@@ -30,6 +30,12 @@ interface SupabaseAuthApi {
         @Header("apikey") apiKey: String,
         @Body body: SupabaseAuthRequest
     ): Response<SupabaseAuthSession>
+
+    @GET("auth/v1/user")
+    suspend fun getUser(
+        @Header("apikey") apiKey: String,
+        @Header("Authorization") authorization: String
+    ): Response<SupabaseAuthUser>
 }
 
 interface SupabaseNotesApi {
