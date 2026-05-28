@@ -10,7 +10,8 @@ data class SupabaseAuthRequest(
 
 data class SupabaseAuthUser(
     val id: String,
-    val email: String? = null
+    val email: String? = null,
+    @Json(name = "user_metadata") val userMetadata: Map<String, Any?>? = null
 )
 
 data class SupabaseAuthSession(
