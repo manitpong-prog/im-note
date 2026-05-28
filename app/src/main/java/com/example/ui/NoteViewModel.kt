@@ -1,4 +1,4 @@
-package com.example.ui
+package com.imnotesminimal.app.ui
 
 import android.app.Application
 import android.content.Context
