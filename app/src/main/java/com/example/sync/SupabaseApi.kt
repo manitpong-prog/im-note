@@ -36,6 +36,14 @@ interface SupabaseAuthApi {
         @Header("apikey") apiKey: String,
         @Header("Authorization") authorization: String
     ): Response<SupabaseAuthUser>
+
+    @Headers("Content-Type: application/json")
+    @POST("functions/v1/delete-account")
+    suspend fun deleteAccount(
+        @Header("apikey") apiKey: String,
+        @Header("Authorization") authorization: String,
+        @Body body: Map<String, @JvmSuppressWildcards Any?> = emptyMap()
+    ): Response<DeleteAccountResponse>
 }
 
 interface SupabaseNotesApi {
@@ -58,7 +66,7 @@ interface SupabaseNotesApi {
     suspend fun upsertNote(
         @Header("apikey") apiKey: String,
         @Header("Authorization") authorization: String,
-        @Body note: Map<String, @JvmSuppressWildcards Any?>
+        note: Map<String, @JvmSuppressWildcards Any?>
     ): Response<List<SupabaseNoteDto>>
 
     @GET("rest/v1/notes")
