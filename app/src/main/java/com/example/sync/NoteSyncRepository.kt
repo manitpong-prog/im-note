@@ -22,6 +22,16 @@ class NoteSyncRepository(
         return Result.success(SyncSummary(uploadedCount = uploaded, downloadedCount = downloaded))
     }
 
+    suspend fun syncLoginAndReplaceLocalCache(
+        userId: String?,
+        accessToken: String?
+    ): Result<SyncSummary> {
+        val uploaded = uploadPendingNotes(userId, accessToken).getOrElse { return Result.failure(it) }
+        noteRepository.deleteAllNotes()
+        val downloaded = pullRemoteNotes(userId, accessToken).getOrElse { return Result.failure(it) }
+        return Result.success(SyncSummary(uploadedCount = uploaded, downloadedCount = downloaded))
+    }
+
     suspend fun uploadPendingNotes(
         userId: String?,
         accessToken: String?
