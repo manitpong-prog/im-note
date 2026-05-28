@@ -1,8 +1,90 @@
 package com.example.sync
 
+import android.net.Uri
 import com.imnotesminimal.app.data.User
 
 class SupabaseAuthRepository {
+    private val googleRedirectUri = "com.imnotesminimal.app://login-callback"
+
+    fun buildGoogleOAuthUrl(): String {
+        if (!SupabaseConfig.isConfigured) return ""
+
+        return Uri.parse("${SupabaseConfig.url}/auth/v1/authorize")
+            .buildUpon()
+            .appendQueryParameter("provider", "google")
+            .appendQueryParameter("redirect_to", googleRedirectUri)
+            .build()
+            .toString()
+    }
+
+    suspend fun createGoogleSessionFromCallback(callbackUri: Uri): Result<Pair<User, SupabaseAuthSession>> {
+        val fragmentUri = Uri.parse("scheme://host?${callbackUri.fragment.orEmpty()}")
+        val accessToken = callbackUri.getQueryParameter("access_token")
+            ?: fragmentUri.getQueryParameter("access_token")
+        val refreshToken = callbackUri.getQueryParameter("refresh_token")
+            ?: fragmentUri.getQueryParameter("refresh_token")
+        val expiresIn = callbackUri.getQueryParameter("expires_in")?.toLongOrNull()
+            ?: fragmentUri.getQueryParameter("expires_in")?.toLongOrNull()
+        val error = callbackUri.getQueryParameter("error_description")
+            ?: callbackUri.getQueryParameter("error")
+            ?: fragmentUri.getQueryParameter("error_description")
+            ?: fragmentUri.getQueryParameter("error")
+
+        if (!error.isNullOrBlank()) {
+            return Result.failure(IllegalStateException(error))
+        }
+
+        if (accessToken.isNullOrBlank()) {
+            return Result.failure(IllegalStateException("ไม่ได้รับ access token จาก Google Login"))
+        }
+
+        if (!SupabaseConfig.isConfigured) {
+            return Result.failure(IllegalStateException("ยังไม่ได้ตั้งค่า Supabase URL และ Anon Key ใน local.properties"))
+        }
+
+        val api = SupabaseService.authApi
+            ?: return Result.failure(IllegalStateException("ไม่สามารถสร้าง Supabase Auth API ได้"))
+
+        return try {
+            val response = api.getUser(
+                apiKey = SupabaseConfig.anonKey,
+                authorization = SupabaseService.bearer(accessToken)
+            )
+
+            if (response.isSuccessful) {
+                val authUser = response.body()
+                    ?: return Result.failure(IllegalStateException("Google Login สำเร็จแต่ไม่ได้รับข้อมูลผู้ใช้"))
+
+                val email = authUser.email ?: "google-user@imnotesminimal.local"
+                val displayName = authUser.userMetadata?.get("full_name") as? String
+                    ?: authUser.userMetadata?.get("name") as? String
+                    ?: email.substringBefore('@').ifBlank { "Google User" }
+
+                val session = SupabaseAuthSession(
+                    accessToken = accessToken,
+                    refreshToken = refreshToken,
+                    expiresIn = expiresIn,
+                    tokenType = "bearer",
+                    user = authUser
+                )
+
+                Result.success(
+                    User(
+                        id = authUser.id,
+                        email = email,
+                        displayName = displayName,
+                        imageUrl = "G",
+                        accountType = "GOOGLE"
+                    ) to session
+                )
+            } else {
+                Result.failure(IllegalStateException(toFriendlyAuthError(response.code(), response.errorBody()?.string(), isRegister = false)))
+            }
+        } catch (e: Exception) {
+            Result.failure(IllegalStateException(toFriendlyNetworkError(e)))
+        }
+    }
+
     suspend fun signUp(email: String, password: String, displayName: String): Result<Pair<User, SupabaseAuthSession?>> {
         if (!SupabaseConfig.isConfigured) {
             return Result.failure(IllegalStateException("ยังไม่ได้ตั้งค่า Supabase URL และ Anon Key ใน local.properties"))
